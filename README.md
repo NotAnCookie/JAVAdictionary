@@ -35,3 +35,22 @@ z zewnętrznych źródeł słownikowych.
 10. **Wyświetlanie informacji o braku definicji**  
     Jeżeli definicja słowa nie jest dostępna, aplikacja informuje o tym użytkownika w czytelny sposób.
 
+## Technologie
+
+- Java 25
+- Spring Boot 3.1.5
+- REST API
+- Maven (zarządzanie zależnościami)
+
+## Uruchomienie
+
+1. Backend: uruchom klasę `DictionaryApplication` w IntelliJ lub przez Maven:
+   ```bash
+   mvn spring-boot:run
+2. Domyślny port backendu: 8080
+3. Test endpointów:
+- `/dictionary/{word}` – wyszukiwanie definicji
+- `/dictionary/{word}?provider=<nazwa_providera>` – wybór źródła słownika
+- `/dictionary/dev/raw/{word}` – RAW JSON (tylko profil `dev`)
+
+
