@@ -7,7 +7,7 @@ public class WordDefinition {
     private String definition;
     private List<String> synonyms;
 
-    // konstruktory
+    // constructors
     public WordDefinition() {}
     public WordDefinition(String word, String definition) {
         this.word = word;

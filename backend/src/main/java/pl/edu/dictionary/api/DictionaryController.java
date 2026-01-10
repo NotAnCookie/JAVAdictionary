@@ -5,6 +5,12 @@ import org.springframework.web.bind.annotation.*;
 import pl.edu.dictionary.model.WordDefinition;
 import pl.edu.dictionary.service.DictionaryService;
 
+/**
+ * Main REST controller.
+ * Returns processed word definitions.
+ */
+
+
 @RestController
 @RequestMapping("/dictionary")
 public class DictionaryController {

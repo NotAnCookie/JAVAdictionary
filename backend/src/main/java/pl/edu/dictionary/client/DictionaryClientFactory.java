@@ -4,6 +4,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+/**
+ * Factory for dictionary client implementations.
+ * Dynamic selection of dictionary providers by name.
+ */
+
 
 @Component
 public class DictionaryClientFactory {

@@ -4,11 +4,20 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import pl.edu.dictionary.client.DictionaryClient;
+import pl.edu.dictionary.client.RawDictionaryClient;
 import pl.edu.dictionary.client.dto.DictionaryApiResponse;
 import pl.edu.dictionary.model.WordDefinition;
 
+/**
+ * Dictionary client implementation for DictionaryAPI.dev.
+ *
+ * Fetches and maps word definitions from the public
+ * DictionaryAPI.dev service.
+ */
+
+
 @Component("dictionaryApiDevClient")
-public class DictionaryApiDevClient implements DictionaryClient {
+public class DictionaryApiDevClient implements DictionaryClient, RawDictionaryClient {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -31,7 +40,7 @@ public class DictionaryApiDevClient implements DictionaryClient {
         return new WordDefinition(word, firstDefinition.definition);
     }
 
-    // 🔧 pomocnicze – TYLKO do debugowania
+    // TESTs only
     public Object fetchWordRaw(String word) {
         return restTemplate.getForObject(API_URL + word, Object.class);
     }
