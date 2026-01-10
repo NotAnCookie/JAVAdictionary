@@ -1,9 +1,6 @@
 package pl.edu.dictionary.api;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import pl.edu.dictionary.model.WordDefinition;
 import pl.edu.dictionary.service.DictionaryService;
@@ -20,13 +17,12 @@ public class DictionaryController {
 
     //
     @GetMapping("/{word}")
-    public WordDefinition getWord(@PathVariable String word) {
-        return service.getWord(word);
-    }
-
-    // TESTOWY (RAW JSON)
-    @GetMapping("/test/raw/{word}")
-    public Object getWordRaw(@PathVariable String word) {
-        return service.getWordRaw(word);
+    public WordDefinition getWord(
+            @PathVariable String word,
+            @RequestParam(required = false) String provider
+    ) {
+        return provider == null
+                ? service.getWord(word)
+                : service.getWord(word, provider);
     }
 }
