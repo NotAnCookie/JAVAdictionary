@@ -18,8 +18,15 @@ public class DictionaryController {
         this.service = service;
     }
 
+    //
     @GetMapping("/{word}")
     public WordDefinition getWord(@PathVariable String word) {
         return service.getWord(word);
+    }
+
+    // TESTOWY (RAW JSON)
+    @GetMapping("/test/raw/{word}")
+    public Object getWordRaw(@PathVariable String word) {
+        return service.getWordRaw(word);
     }
 }

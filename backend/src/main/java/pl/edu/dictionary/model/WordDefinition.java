@@ -7,8 +7,14 @@ public class WordDefinition {
     private String definition;
     private List<String> synonyms;
 
+    // konstruktory
     public WordDefinition() {}
+    public WordDefinition(String word, String definition) {
+        this.word = word;
+        this.definition = definition;
+    }
 
+    // getters and setters
     public String getWord() {
         return word;
     }
