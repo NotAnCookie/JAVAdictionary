@@ -1,5 +1,6 @@
 package pl.edu.dictionary.api;
 
+import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -9,8 +10,14 @@ public class ApiClient {
 	
 	public static DictionaryApi getClient() {
 		if (retrofit == null) {
+			// Add the Interceptor to the OkHttpClient
+			OkHttpClient client = new OkHttpClient.Builder()
+					.addInterceptor(new MockInterceptor()) // remove this line to use the real API
+					.build();
+			
 			retrofit = new Retrofit.Builder()
 					.baseUrl(BASE_URL)
+					.client(client)
 					.addConverterFactory(GsonConverterFactory.create())
 					.build();
 		}

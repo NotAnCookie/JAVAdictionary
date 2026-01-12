@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import pl.edu.dictionary.api.ApiClient;
 import pl.edu.dictionary.models.WordDefinition;
@@ -75,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
 	private void performSearch() {
 		String word = searchEditText.getText().toString();
 		Object provider = providerSpinner.getSelectedItem();
-		if (provider.equals("All")) provider = null;
+		if (Objects.toString(provider).equals("All")) provider = null;
 		String providerString = provider != null ? provider.toString() : null;
 		
 		progressBar.setVisibility(View.VISIBLE);
