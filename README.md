@@ -37,10 +37,18 @@ z zewnętrznych źródeł słownikowych.
 
 ## Technologie
 
+### Backend
+
 - Java 25
 - Spring Boot 3.1.5
 - REST API
 - Maven (zarządzanie zależnościami)
+
+### Frontend
+
+- Android 8+
+- Java 17
+- Retrofit 2.9.0 - komunikacja z REST API
 
 ## Uruchomienie
 
@@ -53,4 +61,9 @@ z zewnętrznych źródeł słownikowych.
 - `/dictionary/{word}?provider=<nazwa_providera>` – wybór źródła słownika
 - `/dictionary/dev/raw/{word}` – RAW JSON (tylko profil `dev`)
 
+### Konfiguracja Klienta:
+
+Aplikacja Android łączy się z backendem pod adresem:
+- Emulator: `http://10.0.2.2:8080/`
+- Fizyczne urządzenie: Adres IP hosta.
 
