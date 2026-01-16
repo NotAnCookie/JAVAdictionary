@@ -8,6 +8,8 @@ import pl.edu.dictionary.client.RawDictionaryClient;
 import pl.edu.dictionary.client.dto.DictionaryApiResponse;
 import pl.edu.dictionary.model.WordDefinition;
 
+import java.util.List;
+
 /**
  * Dictionary client implementation for DictionaryAPI.dev.
  *
@@ -37,7 +39,17 @@ public class DictionaryApiDevClient implements DictionaryClient, RawDictionaryCl
         var firstMeaning = response[0].meanings.get(0);
         var firstDefinition = firstMeaning.definitions.get(0);
 
-        return new WordDefinition(word, firstDefinition.definition);
+        WordDefinition result = new WordDefinition();
+        result.setWord(word);
+        result.setDefinition(firstDefinition.definition);
+        result.setSynonyms(
+                firstDefinition.synonyms != null
+                        ? firstDefinition.synonyms
+                        : List.of()
+        );
+
+        //return new WordDefinition(word, firstDefinition.definition);
+        return result;
     }
 
     // TESTs only
