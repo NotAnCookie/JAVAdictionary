@@ -5,10 +5,13 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
+import pl.edu.dictionary.client.dto.DictionaryProviderDto;
 import pl.edu.dictionary.model.DictionaryProvider;
 import pl.edu.dictionary.model.WordDefinition;
 import pl.edu.dictionary.model.Language;
 import pl.edu.dictionary.service.DictionaryService;
+
+import java.util.List;
 
 /**
  * Main REST controller.
@@ -51,4 +54,15 @@ public class DictionaryController {
                 ? service.getWord(word, lang)
                 : service.getWord(word, provider.getBeanName(), lang);
     }
+
+
+    @Operation(
+            summary = "Get available dictionary providers",
+            description = "Returns all available dictionary providers with supported languages"
+    )
+    @GetMapping("/providers")
+    public List<DictionaryProviderDto> getProviders() {
+        return service.getProviders();
+    }
+
 }

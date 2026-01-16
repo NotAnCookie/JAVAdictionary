@@ -3,10 +3,15 @@ package pl.edu.dictionary.service;
 import org.springframework.stereotype.Service;
 import pl.edu.dictionary.client.DictionaryClient;
 import pl.edu.dictionary.client.LanguageAwareDictionaryClient;
+import pl.edu.dictionary.client.dto.DictionaryProviderDto;
 import pl.edu.dictionary.model.Language;
 import pl.edu.dictionary.model.WordDefinition;
 import pl.edu.dictionary.client.DictionaryClientFactory;
 import pl.edu.dictionary.client.dto.DictionaryApiResponse;
+
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Main dictionary service.
@@ -52,6 +57,30 @@ public class DictionaryService {
 
         // if provider isn't language aware → fallback EN
         return client.getWordDefinition(word);
+    }
+
+
+    public List<DictionaryProviderDto> getProviders() {
+        return factory.getAllClients().entrySet().stream()
+                .map(entry -> {
+                    String id = entry.getKey();
+                    var client = entry.getValue();
+
+                    if (client instanceof LanguageAwareDictionaryClient langClient) {
+                        return new DictionaryProviderDto(
+                                id,
+                                true,
+                                langClient.getSupportedLanguages()
+                        );
+                    }
+
+                    return new DictionaryProviderDto(
+                            id,
+                            false,
+                            Set.of()
+                    );
+                })
+                .collect(Collectors.toList());
     }
 
 
