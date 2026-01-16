@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
 
+import pl.edu.dictionary.model.DictionaryProvider;
 import pl.edu.dictionary.service.DictionaryRawService;
 
 /**
@@ -38,10 +39,10 @@ public class DictionaryDevController {
                     description = "Optional dictionary provider",
                     example = "dictionaryApiDevClient"
             )
-            @RequestParam(required = false) String provider
+            @RequestParam(required = false) DictionaryProvider provider
     ) {
         return provider == null
                 ? service.getRawDefault(word)
-                : service.getRaw(word, provider);
+                : service.getRaw(word, provider.getBeanName());
     }
 }

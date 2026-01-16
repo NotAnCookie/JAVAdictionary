@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
+import pl.edu.dictionary.model.DictionaryProvider;
 import pl.edu.dictionary.model.WordDefinition;
 import pl.edu.dictionary.model.Language;
 import pl.edu.dictionary.service.DictionaryService;
@@ -38,7 +39,7 @@ public class DictionaryController {
                     description = "Optional dictionary provider",
                     example = "dictionaryApiDevClient"
             )
-            @RequestParam(required = false) String provider,
+            @RequestParam(required = false) DictionaryProvider provider,
 
             @Parameter(
                     description = "Optional language (default: EN)",
@@ -48,6 +49,6 @@ public class DictionaryController {
     ) {
         return provider == null
                 ? service.getWord(word, lang)
-                : service.getWord(word, provider, lang);
+                : service.getWord(word, provider.getBeanName(), lang);
     }
 }
