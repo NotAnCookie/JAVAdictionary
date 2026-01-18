@@ -3,10 +3,13 @@ package pl.edu.dictionary;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ListView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import java.util.List;
@@ -21,10 +24,10 @@ public class HistoryActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_history);
+		setSupportActionBar(findViewById(R.id.toolbar));
 		
 		historyManager = new SearchHistoryManager(this);
 		ListView listView = findViewById(R.id.historyListView);
-		Button clearButton = findViewById(R.id.clearHistoryButton);
 		
 		historyList = historyManager.getHistory();
 		adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, historyList);
@@ -38,13 +41,10 @@ public class HistoryActivity extends AppCompatActivity {
 			setResult(RESULT_OK, resultIntent);
 			finish();
 		});
+		
 		listView.setOnItemLongClickListener((parent, view, position, id) -> {
 			showDeleteConfirmationDialog(historyList.get(position));
 			return true;
-		});
-		
-		clearButton.setOnClickListener(v -> {
-			showClearConfirmationDialog();
 		});
 	}
 	
@@ -73,5 +73,23 @@ public class HistoryActivity extends AppCompatActivity {
 		});
 		builder.setNegativeButton("No", null);
 		builder.show();
+	}
+	
+	
+	@Override
+	public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+		int itemId = item.getItemId();
+		if (itemId == R.id.action_clear) {
+			showClearConfirmationDialog();
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.history_menu, menu);
+		return true;
 	}
 }
