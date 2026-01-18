@@ -1,6 +1,10 @@
 package pl.edu.dictionary;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -8,6 +12,9 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.Collections;
@@ -30,10 +37,12 @@ public class MainActivity extends AppCompatActivity {
 	private SearchHistoryManager historyManager;
 	private ArrayAdapter<String> autoCompleteAdapter;
 	
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		setSupportActionBar(findViewById(R.id.toolbar));
 		
 		historyManager = new SearchHistoryManager(this);
 		
@@ -126,5 +135,39 @@ public class MainActivity extends AppCompatActivity {
 	private void saveSearch(String word) {
 		historyManager.saveSearch(word);
 		autoCompleteAdapter.add(word);
+		autoCompleteAdapter.notifyDataSetChanged();
 	}
+	
+	private final ActivityResultLauncher<Intent> historyLauncher =
+			registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+				if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+					// Automatically search when selected from history
+					String word = result.getData().getStringExtra("selected_word");
+					searchEditText.setText(word);
+					performSearch();
+				}
+			});
+	
+	private void openHistory() {
+		Intent intent = new Intent(this, HistoryActivity.class);
+		historyLauncher.launch(intent);
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+		int itemId = item.getItemId();
+		if (itemId == R.id.action_history) {
+			openHistory();
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.action_menu, menu);
+		return true;
+	}
+	
 }
