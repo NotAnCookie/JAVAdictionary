@@ -27,6 +27,8 @@ public class MainActivity extends AppCompatActivity {
 	private TextView resultTextView;
 	private ProgressBar progressBar;
 	
+	private SearchHistoryManager historyManager;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -40,6 +42,9 @@ public class MainActivity extends AppCompatActivity {
 			performSearch();
 			return true;
 		});
+		
+		
+		historyManager = new SearchHistoryManager(this);
 		
 		updateProviderSpinner(Collections.emptyList());
 		updateProviders();
@@ -86,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
 			public void onResponse(Call<List<WordDefinition>> call, Response<List<WordDefinition>> response) {
 				progressBar.setVisibility(View.GONE);
 				if (response.isSuccessful() && response.body() != null) {
+					historyManager.saveSearch(word);
 					displayResults(response.body());
 				}
 				else {
