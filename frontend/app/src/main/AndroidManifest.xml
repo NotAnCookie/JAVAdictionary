@@ -15,6 +15,9 @@
         android:theme="@style/Theme.Frontend"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".FavouriteActivity"
+            android:exported="false" />
+        <activity
             android:name=".DefinitionActivity"
             android:exported="false" />
         <activity
