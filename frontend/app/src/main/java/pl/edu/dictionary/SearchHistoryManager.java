@@ -51,4 +51,15 @@ public class SearchHistoryManager {
 		sharedPreferences.edit().remove(KEY_HISTORY).apply();
 	}
 	
+	public boolean removeSearch(String word) {
+		List<String> history = getHistory();
+		if (history.remove(word)) {
+			sharedPreferences.edit()
+					.putStringSet(KEY_HISTORY, new HashSet<>(history))
+					.apply();
+			return true;
+		}
+		return false;
+	}
+	
 }
