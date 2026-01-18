@@ -1,11 +1,13 @@
 package pl.edu.dictionary;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.ProgressBar;
@@ -52,6 +54,9 @@ public class MainActivity extends AppCompatActivity {
 		progressBar = findViewById(R.id.progressBar);
 		searchEditText.setOnEditorActionListener((v, actionId, event) -> {
 			performSearch();
+			// Hide the keyboard
+			InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+			imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
 			return true;
 		});
 		
@@ -134,6 +139,7 @@ public class MainActivity extends AppCompatActivity {
 	
 	private void saveSearch(String word) {
 		historyManager.saveSearch(word);
+		autoCompleteAdapter.remove(word); // Ensure only one entry is displayed for each word
 		autoCompleteAdapter.add(word);
 		autoCompleteAdapter.notifyDataSetChanged();
 	}
