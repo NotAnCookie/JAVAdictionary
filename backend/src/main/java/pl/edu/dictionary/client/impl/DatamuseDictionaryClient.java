@@ -49,6 +49,4 @@ public class DatamuseDictionaryClient implements DictionaryClient, RawDictionary
     public Object fetchWordRaw(String word) {
         return restTemplate.getForObject(API_URL + word, Object.class);
     }
-
-
 }

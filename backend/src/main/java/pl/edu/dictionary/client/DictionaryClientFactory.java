@@ -30,5 +30,9 @@ public class DictionaryClientFactory {
     public DictionaryClient getDefaultClient() {
         return clients.get("dictionaryApiDevClient");
     }
+
+    public Map<String, DictionaryClient> getAllClients() {
+        return clients;
+    }
 }
 
