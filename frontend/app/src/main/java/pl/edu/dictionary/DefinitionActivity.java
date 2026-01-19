@@ -16,6 +16,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import java.util.Objects;
+
 import pl.edu.dictionary.models.WordDefinition;
 
 public class DefinitionActivity extends AppCompatActivity {
@@ -53,7 +55,7 @@ public class DefinitionActivity extends AppCompatActivity {
 	
 	
 	private void displayDefinitions(@NonNull WordDefinition[] wordDefinitions) {
-		actionBar.setTitle(wordDefinitions[0].getWord());
+		Objects.requireNonNull(getSupportActionBar()).setTitle(wordDefinitions[0].getWord());
 		var arrayAdapter = new ArrayAdapter<>(this, R.layout.word_definition, wordDefinitions) {
 			@NonNull
 			@Override
@@ -69,9 +71,11 @@ public class DefinitionActivity extends AppCompatActivity {
 		
 	}
 	private void displayDefinition(View view, @NonNull WordDefinition wordDefinition) {
+		TextView providerTextView = view.findViewById(R.id.providerTextView);
 		TextView definitionTextView = view.findViewById(R.id.definitionTextView);
 		TextView synonymsTextView = view.findViewById(R.id.synonymsTextView);
 		
+		providerTextView.setText(wordDefinition.getWord()); // TODO: Replace with provider name
 		definitionTextView.setText(wordDefinition.getDefinition());
 		if (wordDefinition.getSynonyms().isEmpty())
 			synonymsTextView.setVisibility(View.GONE);
