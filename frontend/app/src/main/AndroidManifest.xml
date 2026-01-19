@@ -15,6 +15,13 @@
         android:theme="@style/Theme.Frontend"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".DefinitionActivity"
+            android:exported="false" />
+        <activity
+            android:name=".HistoryActivity"
+            android:label="Search History"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
@@ -23,7 +30,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".HistoryActivity" android:label="Search History" />
     </application>
 
 </manifest>

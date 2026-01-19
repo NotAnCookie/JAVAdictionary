@@ -19,6 +19,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -60,7 +61,8 @@ public class MainActivity extends AppCompatActivity {
 			return true;
 		});
 		
-		autoCompleteAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line);
+		var history = new ArrayList<>(historyManager.getHistory());
+		autoCompleteAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, history);
 		searchEditText.setAdapter(autoCompleteAdapter);
 		
 		updateProviderSpinner(Collections.emptyList());
@@ -109,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
 				progressBar.setVisibility(View.GONE);
 				if (response.isSuccessful() && response.body() != null) {
 					saveSearch(word);
-					displayResults(response.body());
+					openDefinitions(response.body().toArray(new WordDefinition[0]));
 				}
 				else {
 					resultTextView.setText("No definitions found for: " + word);
@@ -122,19 +124,6 @@ public class MainActivity extends AppCompatActivity {
 				resultTextView.setText("Error: Connection failed.");
 			}
 		});
-	}
-	
-	private void displayResults(List<WordDefinition> entries) {
-		StringBuilder sb = new StringBuilder();
-		for (WordDefinition entry : entries) {
-			sb.append("Word: ").append(entry.getWord()).append("\n");
-			sb.append("Definition: ").append(entry.getDefinition()).append("\n");
-			if (entry.getSynonyms() != null && !entry.getSynonyms().isEmpty()) {
-				sb.append("Synonyms: ").append(String.join(", ", entry.getSynonyms())).append("\n");
-			}
-			sb.append("\n---\n\n");
-		}
-		resultTextView.setText(sb.toString());
 	}
 	
 	private void saveSearch(String word) {
@@ -159,6 +148,12 @@ public class MainActivity extends AppCompatActivity {
 		historyLauncher.launch(intent);
 	}
 	
+	private void openDefinitions(WordDefinition[] wordDefinitions) {
+		Intent intent = new Intent(this, DefinitionActivity.class);
+		intent.putExtra(DefinitionActivity.WORD_DEFINITION_EXTRA, wordDefinitions);
+		startActivity(intent);
+	}
+	
 	@Override
 	public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 		int itemId = item.getItemId();
@@ -172,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.action_menu, menu);
+		inflater.inflate(R.menu.main_menu, menu);
 		return true;
 	}
 	
