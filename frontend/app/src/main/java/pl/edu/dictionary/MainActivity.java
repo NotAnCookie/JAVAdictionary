@@ -19,6 +19,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -60,7 +61,8 @@ public class MainActivity extends AppCompatActivity {
 			return true;
 		});
 		
-		autoCompleteAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line);
+		var history = new ArrayList<>(historyManager.getHistory());
+		autoCompleteAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, history);
 		searchEditText.setAdapter(autoCompleteAdapter);
 		
 		updateProviderSpinner(Collections.emptyList());
