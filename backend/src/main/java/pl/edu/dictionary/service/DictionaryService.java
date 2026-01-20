@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import pl.edu.dictionary.client.DictionaryClient;
 import pl.edu.dictionary.client.LanguageAwareDictionaryClient;
 import pl.edu.dictionary.client.dto.DictionaryProviderDto;
+import pl.edu.dictionary.model.DictionaryProvider;
 import pl.edu.dictionary.model.Language;
 import pl.edu.dictionary.model.WordDefinition;
 import pl.edu.dictionary.client.DictionaryClientFactory;
@@ -30,11 +31,23 @@ public class DictionaryService {
     }
 
     public WordDefinition getWord(String word) {
-        return factory.getDefaultClient().getWordDefinition(word);
+        DictionaryProvider provider = factory.getDefaultProvider();
+
+        WordDefinition result =
+                factory.getDefaultClient().getWordDefinition(word);
+
+        result.setProvider(provider);
+        return result;
     }
 
     public WordDefinition getWord(String word, String provider) {
-        return factory.getClient(provider).getWordDefinition(word);
+        DictionaryProvider resolved = factory.resolveProvider(provider);
+
+        WordDefinition result =
+                factory.getClient(provider).getWordDefinition(word);
+
+        result.setProvider(resolved);
+        return result;
     }
 
     public WordDefinition getWord(String word, Language lang) {
@@ -42,9 +55,18 @@ public class DictionaryService {
     }
 
     public WordDefinition getWord(String word, String provider, Language language) {
-        DictionaryClient client = (provider == null)
-                ? factory.getDefaultClient()
-                : factory.getClient(provider);
+
+        DictionaryProvider resolvedProvider =
+                (provider == null)
+                        ? factory.getDefaultProvider()
+                        : factory.resolveProvider(provider);
+
+        DictionaryClient client =
+                (provider == null)
+                        ? factory.getDefaultClient()
+                        : factory.getClient(provider);
+
+        WordDefinition result;
 
         if (client instanceof LanguageAwareDictionaryClient langClient) {
 
@@ -52,11 +74,13 @@ public class DictionaryService {
                 throw new IllegalArgumentException("Language not supported");
             }
 
-            return client.getWordDefinition(word, language);
+            result = client.getWordDefinition(word, language);
+        } else {
+            result = client.getWordDefinition(word);
         }
 
-        // if provider isn't language aware → fallback EN
-        return client.getWordDefinition(word);
+        result.setProvider(resolvedProvider);
+        return result;
     }
 
 
