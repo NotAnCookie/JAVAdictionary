@@ -1,11 +1,13 @@
 package pl.edu.dictionary.model;
 
+import java.util.Dictionary;
 import java.util.List;
 
 public class WordDefinition {
     private String word;
     private String definition;
     private List<String> synonyms;
+    private DictionaryProvider provider;
 
     // constructors
     public WordDefinition() {}
@@ -38,4 +40,8 @@ public class WordDefinition {
     public void setSynonyms(List<String> synonyms) {
         this.synonyms = synonyms;
     }
+
+    public DictionaryProvider getProvider() { return provider; }
+
+    public void setProvider(DictionaryProvider provider) { this.provider = provider; }
 }
