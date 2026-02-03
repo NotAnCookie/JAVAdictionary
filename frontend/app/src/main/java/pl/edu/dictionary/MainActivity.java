@@ -1,8 +1,10 @@
 package pl.edu.dictionary;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -24,11 +26,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import pl.edu.dictionary.api.ApiClient;
 import pl.edu.dictionary.models.WordDefinition;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 	
@@ -70,24 +71,19 @@ public class MainActivity extends AppCompatActivity {
 		
 	}
 	
+	@SuppressWarnings("ResultOfMethodCallIgnored")
+	@SuppressLint("CheckResult")
 	private void updateProviders() {
-		ApiClient.getClient().getProviders().enqueue(new Callback<>() {
-			@Override
-			public void onResponse(Call<List<String>> call, Response<List<String>> response) {
-				if (response.isSuccessful() && response.body() != null) {
-					List<String> providers = response.body();
-					updateProviderSpinner(providers);
-				}
-				else {
-					// Handle error
-				}
-			}
-			
-			@Override
-			public void onFailure(Call<List<String>> call, Throwable t) {
-				resultTextView.setText("Error: Connection failed.");
-			}
-		});
+		ApiClient.getClient().getProviders()
+				.subscribeOn(Schedulers.io())
+				.observeOn(AndroidSchedulers.mainThread())
+				.subscribe(
+						this::updateProviderSpinner,
+						t -> {
+							Log.e("MainActivity", "Provider load error", t);
+							resultTextView.setText("Error: Connection failed.");
+						}
+				);
 	}
 	
 	private void updateProviderSpinner(List<String> providers) {
@@ -97,6 +93,8 @@ public class MainActivity extends AppCompatActivity {
 		
 	}
 	
+	@SuppressWarnings("ResultOfMethodCallIgnored")
+	@SuppressLint("CheckResult")
 	private void performSearch() {
 		String word = searchEditText.getText().toString();
 		Object provider = providerSpinner.getSelectedItem();
@@ -105,25 +103,25 @@ public class MainActivity extends AppCompatActivity {
 		
 		progressBar.setVisibility(View.VISIBLE);
 		
-		ApiClient.getClient().getDefinitions(word, providerString).enqueue(new Callback<>() {
-			@Override
-			public void onResponse(Call<List<WordDefinition>> call, Response<List<WordDefinition>> response) {
-				progressBar.setVisibility(View.GONE);
-				if (response.isSuccessful() && response.body() != null) {
-					saveSearch(word);
-					openDefinitions(response.body().toArray(new WordDefinition[0]));
-				}
-				else {
-					resultTextView.setText("No definitions found for: " + word);
-				}
-			}
-			
-			@Override
-			public void onFailure(Call<List<WordDefinition>> call, Throwable t) {
-				progressBar.setVisibility(View.GONE);
-				resultTextView.setText("Error: Connection failed.");
-			}
-		});
+		ApiClient.getClient().getDefinitions(word, providerString)
+				.subscribeOn(Schedulers.io())
+				.observeOn(AndroidSchedulers.mainThread())
+				.subscribe(
+						definitions -> {
+							progressBar.setVisibility(View.GONE);
+							if (definitions != null && !definitions.isEmpty()) {
+								saveSearch(word);
+								openDefinitions(definitions.toArray(new WordDefinition[0]));
+							} else {
+								resultTextView.setText("No definitions found for: " + word);
+							}
+						},
+						t -> {
+							Log.e("MainActivity", "Word search error", t);
+							progressBar.setVisibility(View.GONE);
+							resultTextView.setText("Error: Connection failed.");
+						}
+				);
 	}
 	
 	private void saveSearch(String word) {
