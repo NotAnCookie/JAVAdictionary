@@ -1,10 +1,10 @@
 package pl.edu.dictionary.models;
 
 public enum Language {
-    EN("en"),
-    ES("es"),
-    FR("fr"),
-    DE("de");
+    EN("EN"),
+    ES("ES"),
+    FR("FR"),
+    DE("DE");
 
     private final String code;
 

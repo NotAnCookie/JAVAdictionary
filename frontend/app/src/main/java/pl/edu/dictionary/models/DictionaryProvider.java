@@ -1,5 +1,7 @@
 package pl.edu.dictionary.models;
 
+import androidx.annotation.NonNull;
+
 import java.util.Collections;
 import java.util.Set;
 
@@ -28,6 +30,17 @@ public class DictionaryProvider {
 		return supportedLanguages;
 	}
 	
-	public static final DictionaryProvider ALL = new DictionaryProvider("All", false, Collections.emptySet());
+	@NonNull
+	@Override
+	public String toString() {
+		var name = id;
+		if (name.endsWith("Client"))
+			name = name.substring(0, name.length() - "Client".length());
+		name = name.substring(0, 1).toUpperCase() + name.substring(1);
+		return name;
+	}
+	
+	
+	public static final DictionaryProvider ALL = new DictionaryProvider("All providers", false, Collections.emptySet());
 	
 }

@@ -9,7 +9,9 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.ProgressBar;
@@ -19,28 +21,34 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import pl.edu.dictionary.api.ApiClient;
+import pl.edu.dictionary.models.DictionaryProvider;
+import pl.edu.dictionary.models.Language;
 import pl.edu.dictionary.models.WordDefinition;
 
 public class MainActivity extends AppCompatActivity {
 	
 	private AutoCompleteTextView searchEditText;
 	private Spinner providerSpinner;
+	private Spinner languageSpinner;
+	private TextView providerTextView;
+	private TextView languageTextView;
 	private TextView resultTextView;
 	private ProgressBar progressBar;
 	
 	private SearchHistoryManager historyManager;
 	private ArrayAdapter<String> autoCompleteAdapter;
 	
+	private List<DictionaryProvider> dictionaryProviders;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +60,9 @@ public class MainActivity extends AppCompatActivity {
 		
 		searchEditText = findViewById(R.id.searchEditText);
 		providerSpinner = findViewById(R.id.providerSpinner);
+		languageSpinner = findViewById(R.id.languageSpinner);
+		providerTextView = findViewById(R.id.providerTextView);
+		languageTextView = findViewById(R.id.languageTextView);
 		resultTextView = findViewById(R.id.resultTextView);
 		progressBar = findViewById(R.id.progressBar);
 		searchEditText.setOnEditorActionListener((v, actionId, event) -> {
@@ -61,6 +72,26 @@ public class MainActivity extends AppCompatActivity {
 			imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
 			return true;
 		});
+		
+		providerSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+				DictionaryProvider selectedProvider = (DictionaryProvider) parent.getItemAtPosition(position);
+				if (selectedProvider == null) return;
+				languageSpinner.setAdapter(new ArrayAdapter<>(
+						MainActivity.this,
+						android.R.layout.simple_spinner_item,
+						selectedProvider.isLanguageAware() ? selectedProvider.getSupportedLanguages().toArray() : new Object[0]
+				));
+				setLanguagesVisibility(selectedProvider.isLanguageAware());
+			}
+			
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) {
+				Log.d("MainActivity", "Nothing selected");
+			}
+		});
+		
 		
 		var history = new ArrayList<>(historyManager.getHistory());
 		autoCompleteAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, history);
@@ -74,36 +105,46 @@ public class MainActivity extends AppCompatActivity {
 	@SuppressWarnings("ResultOfMethodCallIgnored")
 	@SuppressLint("CheckResult")
 	private void updateProviders() {
-		ApiClient.getClient().getProviders()
+		ApiClient.getDictionaryClient().getProviders()
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread())
+				.doOnSubscribe(disposable -> progressBar.setVisibility(View.VISIBLE))
+				.doFinally(() -> progressBar.setVisibility(View.GONE))
 				.subscribe(
 						this::updateProviderSpinner,
 						t -> {
+							dictionaryProviders = Collections.emptyList();
 							Log.e("MainActivity", "Provider load error", t);
 							resultTextView.setText("Error: Connection failed.");
 						}
 				);
 	}
 	
-	private void updateProviderSpinner(List<String> providers) {
-		ArrayAdapter<String> adapter = new ArrayAdapter<>(MainActivity.this, android.R.layout.simple_spinner_item, providers);
+	private void updateProviderSpinner(List<DictionaryProvider> providers) {
+		dictionaryProviders = new ArrayList<>(providers);
+		dictionaryProviders.add(0, DictionaryProvider.ALL);
+		providerSpinner.setSelection(0);
+		ArrayAdapter<DictionaryProvider> adapter = new ArrayAdapter<>(MainActivity.this, android.R.layout.simple_spinner_item, dictionaryProviders);
 		providerSpinner.setAdapter(adapter);
-		providerSpinner.setVisibility(providers.isEmpty() ? View.GONE : View.VISIBLE);
-		
+		setProvidersVisibility(!providers.isEmpty());
 	}
 	
 	@SuppressWarnings("ResultOfMethodCallIgnored")
 	@SuppressLint("CheckResult")
 	private void performSearch() {
 		String word = searchEditText.getText().toString();
-		Object provider = providerSpinner.getSelectedItem();
-		if (Objects.toString(provider).equals("All")) provider = null;
-		String providerString = provider != null ? provider.toString() : null;
+		if (word.isEmpty()) return;
+		
+		DictionaryProvider provider = (DictionaryProvider) providerSpinner.getSelectedItem();
+		if (provider == DictionaryProvider.ALL) provider = null;
+		String providerString = provider != null ? provider.getId() : null;
+		
+		Language language = (Language) languageSpinner.getSelectedItem();
+		String languageString = language != null ? language.getCode() : null;
 		
 		progressBar.setVisibility(View.VISIBLE);
 		
-		ApiClient.getClient().getDefinitions(word, providerString)
+		ApiClient.getDictionaryClient().getDefinitions(word, providerString, languageString)
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread())
 				.subscribe(
@@ -129,6 +170,20 @@ public class MainActivity extends AppCompatActivity {
 		autoCompleteAdapter.remove(word); // Ensure only one entry is displayed for each word
 		autoCompleteAdapter.add(word);
 		autoCompleteAdapter.notifyDataSetChanged();
+	}
+	
+	private void setProvidersVisibility(boolean visible) {
+		providerTextView.setVisibility(visible ? View.VISIBLE : View.GONE);
+		providerSpinner.setVisibility(visible ? View.VISIBLE : View.GONE);
+		if (!visible) {
+			languageTextView.setVisibility(View.GONE);
+			languageSpinner.setVisibility(View.GONE);
+		}
+	}
+	
+	private void setLanguagesVisibility(boolean visible) {
+		languageTextView.setVisibility(visible ? View.VISIBLE : View.GONE);
+		languageSpinner.setVisibility(visible ? View.VISIBLE : View.GONE);
 	}
 	
 	private final ActivityResultLauncher<Intent> historyLauncher =
