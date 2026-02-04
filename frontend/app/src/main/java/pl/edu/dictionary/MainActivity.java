@@ -1,6 +1,5 @@
 package pl.edu.dictionary;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -28,6 +27,8 @@ import java.util.Collections;
 import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import pl.edu.dictionary.api.ApiClient;
 import pl.edu.dictionary.models.DictionaryProvider;
@@ -35,6 +36,8 @@ import pl.edu.dictionary.models.Language;
 import retrofit2.HttpException;
 
 public class MainActivity extends AppCompatActivity {
+	
+	private final CompositeDisposable disposables = new CompositeDisposable();
 	
 	private AutoCompleteTextView searchEditText;
 	private Spinner providerSpinner;
@@ -102,10 +105,8 @@ public class MainActivity extends AppCompatActivity {
 			performSearch();
 		});
 		
-		
 		updateProviderSpinner(Collections.emptyList());
 		updateProviders();
-		
 	}
 	
 	@Override
@@ -114,10 +115,9 @@ public class MainActivity extends AppCompatActivity {
 		searchService.syncHistory();
 	}
 	
-	@SuppressWarnings("ResultOfMethodCallIgnored")
-	@SuppressLint("CheckResult")
+	
 	private void updateProviders() {
-		ApiClient.getDictionaryClient().getProviders()
+		disposables.add(ApiClient.getDictionaryClient().getProviders()
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread())
 				.doOnSubscribe(disposable -> progressBar.setVisibility(View.VISIBLE))
@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
 							Log.e("MainActivity", "Provider load error", t);
 							errorTextView.setText("Error: Connection failed.");
 						}
-				);
+				));
 	}
 	
 	private void updateProviderSpinner(List<DictionaryProvider> providers) {
@@ -141,9 +141,6 @@ public class MainActivity extends AppCompatActivity {
 		setProvidersVisibility(!providers.isEmpty());
 	}
 	
-	
-	@SuppressWarnings("ResultOfMethodCallIgnored")
-	@SuppressLint("CheckResult")
 	private void performSearch() {
 		var word = searchEditText.getText().toString();
 		var provider = (DictionaryProvider) providerSpinner.getSelectedItem();
@@ -151,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
 		
 		progressBar.setVisibility(View.VISIBLE);
 		
-		searchService.performSearch(word, provider, language,
+		Disposable disposable = searchService.performSearch(word, provider, language,
 				definitions -> {
 					DefinitionActivity.launchActivity(this, definitions);
 					progressBar.setVisibility(View.GONE);
@@ -165,16 +162,15 @@ public class MainActivity extends AppCompatActivity {
 						displayError(t);
 					}
 					progressBar.setVisibility(View.GONE);
-				}
-		);
+				});
+		if (disposable != null)
+			disposables.add(disposable);
+		else
+			progressBar.setVisibility(View.GONE);
 	}
 	
-	
-	
-	@SuppressWarnings("ResultOfMethodCallIgnored")
-	@SuppressLint("CheckResult")
 	private void autoComplete(String query) {
-		ApiClient.getAutocompleteClient().getAutocompleteSuggestions(query)
+		disposables.add(ApiClient.getAutocompleteClient().getAutocompleteSuggestions(query)
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread())
 				.subscribe(
@@ -183,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
 							progressBar.setVisibility(View.GONE);
 						},
 						this::displayError
-				);
+				));
 	}
 	
 	private void showAutocompleteSuggestions(List<String> suggestions) {
@@ -263,6 +259,12 @@ public class MainActivity extends AppCompatActivity {
 		super.onNewIntent(intent);
 		setIntent(intent);
 		searchEditText.setText("");
+	}
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		disposables.clear();
 	}
 	
 }

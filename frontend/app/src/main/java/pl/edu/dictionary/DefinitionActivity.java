@@ -1,6 +1,5 @@
 package pl.edu.dictionary;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
@@ -33,11 +32,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import pl.edu.dictionary.models.WordDefinition;
 import retrofit2.HttpException;
 
 public class DefinitionActivity extends AppCompatActivity {
 	public static final String WORD_DEFINITION_EXTRA = "word_definition";
+	
+	private final CompositeDisposable disposables = new CompositeDisposable();
 	
 	private ListView definitionsListView;
 	private TextView lookupTextView;
@@ -175,11 +177,9 @@ public class DefinitionActivity extends AppCompatActivity {
 	
 	}
 	
-	@SuppressWarnings("ResultOfMethodCallIgnored")
-	@SuppressLint("CheckResult")
 	private void lookupWord(String word) {
-		searchService.performSearch(word, null, null,
-				disposable -> lookupProgressBar.setVisibility(View.VISIBLE),
+		var disposable = searchService.performSearch(word, null, null,
+				d -> lookupProgressBar.setVisibility(View.VISIBLE),
 				() -> lookupProgressBar.setVisibility(View.GONE),
 				definitions -> launchActivity(this, definitions),
 				t -> {
@@ -201,6 +201,9 @@ public class DefinitionActivity extends AppCompatActivity {
 					}
 				}
 		);
+		
+		if (disposable != null)
+			disposables.add(disposable);
 	}
 	
 	public static void launchActivity(Activity context, List<WordDefinition> wordDefinitions) {
@@ -229,4 +232,9 @@ public class DefinitionActivity extends AppCompatActivity {
 		return true;
 	}
 	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		disposables.clear();
+	}
 }
