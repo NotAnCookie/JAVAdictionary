@@ -11,10 +11,12 @@ public class WordDefinition implements Parcelable {
 	private String word;
 	private String definition;
 	private List<String> synonyms;
+	private String provider;
 	
 	public String getWord() { return word; }
 	public String getDefinition() { return definition; }
 	public List<String> getSynonyms() { return synonyms; }
+	public String getProvider() { return provider; }
 	
 	public WordDefinition() {}
 	
@@ -25,6 +27,7 @@ public class WordDefinition implements Parcelable {
 		word = in.readString();
 		definition = in.readString();
 		synonyms = in.createStringArrayList();
+		provider = in.readString();
 	}
 	
 	public static final Creator<WordDefinition> CREATOR = new Creator<>() {
@@ -50,6 +53,7 @@ public class WordDefinition implements Parcelable {
 		dest.writeString(word);
 		dest.writeString(definition);
 		dest.writeStringList(synonyms);
+		dest.writeString(provider);
 	}
 	
 }
