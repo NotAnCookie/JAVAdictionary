@@ -9,11 +9,11 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -21,7 +21,6 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
@@ -34,6 +33,7 @@ import pl.edu.dictionary.api.ApiClient;
 import pl.edu.dictionary.models.DictionaryProvider;
 import pl.edu.dictionary.models.Language;
 import pl.edu.dictionary.models.WordDefinition;
+import retrofit2.HttpException;
 
 public class MainActivity extends AppCompatActivity {
 	
@@ -42,8 +42,10 @@ public class MainActivity extends AppCompatActivity {
 	private Spinner languageSpinner;
 	private TextView providerTextView;
 	private TextView languageTextView;
-	private TextView resultTextView;
 	private ProgressBar progressBar;
+	private TextView errorTextView;
+	private TextView wordNotFoundTextView;
+	private ListView autocompleteListView;
 	
 	private SearchHistoryManager historyManager;
 	private ArrayAdapter<String> autoCompleteAdapter;
@@ -63,7 +65,9 @@ public class MainActivity extends AppCompatActivity {
 		languageSpinner = findViewById(R.id.languageSpinner);
 		providerTextView = findViewById(R.id.providerTextView);
 		languageTextView = findViewById(R.id.languageTextView);
-		resultTextView = findViewById(R.id.resultTextView);
+		errorTextView = findViewById(R.id.errorTextView);
+		wordNotFoundTextView = findViewById(R.id.wordNotFoundTextView);
+		autocompleteListView = findViewById(R.id.autocompleteListView);
 		progressBar = findViewById(R.id.progressBar);
 		searchEditText.setOnEditorActionListener((v, actionId, event) -> {
 			performSearch();
@@ -92,6 +96,11 @@ public class MainActivity extends AppCompatActivity {
 			}
 		});
 		
+		autocompleteListView.setOnItemClickListener((parent, view, position, id) -> {
+			String selectedWord = (String) parent.getItemAtPosition(position);
+			searchEditText.setText(selectedWord);
+			performSearch();
+		});
 		
 		var history = new ArrayList<>(historyManager.getHistory());
 		autoCompleteAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, history);
@@ -115,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
 						t -> {
 							dictionaryProviders = Collections.emptyList();
 							Log.e("MainActivity", "Provider load error", t);
-							resultTextView.setText("Error: Connection failed.");
+							errorTextView.setText("Error: Connection failed.");
 						}
 				);
 	}
@@ -149,18 +158,20 @@ public class MainActivity extends AppCompatActivity {
 				.observeOn(AndroidSchedulers.mainThread())
 				.subscribe(
 						definitions -> {
-							progressBar.setVisibility(View.GONE);
 							if (definitions != null && !definitions.isEmpty()) {
 								saveSearch(word);
 								openDefinitions(definitions.toArray(new WordDefinition[0]));
 							} else {
-								resultTextView.setText("No definitions found for: " + word);
+								errorTextView.setText("No definitions found for: " + word);
 							}
+							progressBar.setVisibility(View.GONE);
 						},
 						t -> {
-							Log.e("MainActivity", "Word search error", t);
-							progressBar.setVisibility(View.GONE);
-							resultTextView.setText("Error: Connection failed.");
+							if (t instanceof HttpException httpException && httpException.code() == 404) {
+								autoComplete(word);
+								return;
+							}
+							displayError(word, t);
 						}
 				);
 	}
@@ -170,6 +181,48 @@ public class MainActivity extends AppCompatActivity {
 		autoCompleteAdapter.remove(word); // Ensure only one entry is displayed for each word
 		autoCompleteAdapter.add(word);
 		autoCompleteAdapter.notifyDataSetChanged();
+	}
+	
+	@SuppressWarnings("ResultOfMethodCallIgnored")
+	@SuppressLint("CheckResult")
+	private void autoComplete(String query) {
+		ApiClient.getAutocompleteClient().getAutocompleteSuggestions(query)
+				.subscribeOn(Schedulers.io())
+				.observeOn(AndroidSchedulers.mainThread())
+				.subscribe(
+						suggestions -> {
+							showAutocompleteSuggestions(suggestions);
+							progressBar.setVisibility(View.GONE);
+						},
+						t -> displayError(query, t)
+				);
+	}
+	
+	private void showAutocompleteSuggestions(List<String> suggestions) {
+		if (suggestions.isEmpty()) {
+			wordNotFoundTextView.setVisibility(View.VISIBLE);
+			autocompleteListView.setVisibility(View.GONE);
+			wordNotFoundTextView.setText("Word '" + searchEditText.getText() + "' not found.");
+		} else {
+			wordNotFoundTextView.setVisibility(View.VISIBLE);
+			autocompleteListView.setVisibility(View.VISIBLE);
+			wordNotFoundTextView.setText("Word '" + searchEditText.getText() + "' not found.\nDid You mean:");
+			autocompleteListView.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, suggestions));
+		}
+	}
+	
+	private void displayError(String word, Throwable t) {
+		Log.e("MainActivity", "Word search error", t);
+		if (t instanceof HttpException httpException) {
+			
+			if (httpException.code() >= 500)
+				errorTextView.setText("Internal server error.");
+			else
+				errorTextView.setText("Error: " + httpException.message());
+		} else {
+			errorTextView.setText("Error: Connection failed.");
+		}
+		progressBar.setVisibility(View.GONE);
 	}
 	
 	private void setProvidersVisibility(boolean visible) {
