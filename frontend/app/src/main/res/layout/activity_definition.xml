@@ -1,9 +1,11 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mainLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:animateLayoutChanges="true">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
@@ -18,23 +20,49 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingHorizontal="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="0dp">
+
         <TextView
             android:id="@+id/errorTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
             android:textColor="@color/black"
+            android:textSize="18sp"
             android:visibility="gone"
-            tools:text="Error text"/>
+            tools:text="Error text" />
+
         <ListView
             android:id="@+id/definitionListView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:dividerHeight="10dp"
             android:divider="?attr/colorSurface"
+            android:dividerHeight="10dp"
             tools:listitem="@layout/word_definition" />
     </LinearLayout>
+    <TextView
+        android:id="@+id/lookupTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorSecondaryContainer"
+        android:textColor="?attr/colorOnSecondaryContainer"
+        android:paddingVertical="12dp"
+        android:paddingHorizontal="16dp"
+        android:visibility="gone"
+        tools:visibility="visible"
+        tools:text="Lorem" />
+    <ProgressBar
+        android:id="@+id/lookupProgressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:background="?attr/colorSecondaryContainer"
+        android:indeterminateTint="?attr/colorOnSecondaryContainer"
+        android:visibility="gone"
+        tools:visibility="visible" />
 </LinearLayout>

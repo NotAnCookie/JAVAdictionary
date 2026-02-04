@@ -14,25 +14,47 @@ import okhttp3.ResponseBody;
 
 public class MockInterceptor implements Interceptor {
 	
+	private static final boolean SLEEP = true;
+	private static final boolean LOG_RESPONSE = false;
+	private static final boolean MOCK_RESPONSE = true;
+	
 	@NonNull
 	@Override
-	public Response intercept(Chain chain) {
+	public Response intercept(Chain chain) throws IOException {
 		String uri = chain.request().url().uri().toString();
 		Log.d("MockInterceptor", "uri: " + uri);
+		if (SLEEP) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		if (LOG_RESPONSE || !MOCK_RESPONSE) {
+			var response = chain.proceed(chain.request());
+			if (LOG_RESPONSE)
+				Log.d("MockInterceptor", "responseString: " + response.body().string());
+			if (!MOCK_RESPONSE)
+				return response;
+		}
 		
-		String responseString = getResponseString(uri);
-//		try (var response = chain.proceed(chain.request())) {
-//			Log.d("MockInterceptor", "responseString: " + response.body().string());
-//			return response;
-//		} catch (IOException e) {
-//			throw new RuntimeException(e);
-//		}
+		// mock
+		if (uri.contains("dictionary/no")) {
+			return new Response.Builder()
+					.code(404)
+					.message("Not Found")
+					.request(chain.request())
+					.protocol(Protocol.HTTP_1_0)
+					.body(ResponseBody.create("".getBytes(), MediaType.parse("application/json")))
+					.addHeader("content-type", "application/json")
+					.build();
+		}
 		return new Response.Builder()
 				.code(200)
 				.message("OK")
 				.request(chain.request())
 				.protocol(Protocol.HTTP_1_0)
-				.body(ResponseBody.create(responseString.getBytes(), MediaType.parse("application/json")))
+				.body(ResponseBody.create(getResponseString(uri).getBytes(), MediaType.parse("application/json")))
 				.addHeader("content-type", "application/json")
 				.build();
 	}
@@ -59,9 +81,12 @@ public class MockInterceptor implements Interceptor {
 				responseString = "{" +
 								"\"word\": \"java\"," +
 								"\"definition\": \"An island in Indonesia\"," +
-								"\"synonyms\": [\"Coffee\"]," +
+								"\"synonyms\": [\"Coffee\", \"no\"]," +
 								"\"provider\": \"Wikisłownik\"" +
 								"}";
+		}
+		else if (uri.contains("autocomplete")) {
+			responseString = "[\"java\", \"javascript\"]";
 		}
 		return responseString;
 	}
