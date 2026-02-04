@@ -32,7 +32,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import pl.edu.dictionary.api.ApiClient;
 import pl.edu.dictionary.models.DictionaryProvider;
 import pl.edu.dictionary.models.Language;
-import pl.edu.dictionary.models.WordDefinition;
 import retrofit2.HttpException;
 
 public class MainActivity extends AppCompatActivity {
@@ -160,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
 						definitions -> {
 							if (definitions != null && !definitions.isEmpty()) {
 								saveSearch(word);
-								openDefinitions(definitions.toArray(new WordDefinition[0]));
+								DefinitionActivity.launchActivity(this, definitions);
 							} else {
 								errorTextView.setText("No definitions found for: " + word);
 							}
@@ -252,12 +251,6 @@ public class MainActivity extends AppCompatActivity {
 	private void openHistory() {
 		Intent intent = new Intent(this, HistoryActivity.class);
 		historyLauncher.launch(intent);
-	}
-	
-	private void openDefinitions(WordDefinition[] wordDefinitions) {
-		Intent intent = new Intent(this, DefinitionActivity.class);
-		intent.putExtra(DefinitionActivity.WORD_DEFINITION_EXTRA, wordDefinitions);
-		startActivity(intent);
 	}
 	
 	@Override
