@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import pl.edu.dictionary.client.DictionaryClient;
 import pl.edu.dictionary.client.LanguageAwareDictionaryClient;
 import pl.edu.dictionary.client.dto.DictionaryProviderDto;
+import pl.edu.dictionary.exception.LanguageNotSupportedException;
 import pl.edu.dictionary.model.DictionaryProvider;
 import pl.edu.dictionary.model.Language;
 import pl.edu.dictionary.model.WordDefinition;
@@ -72,7 +73,7 @@ public class DictionaryService {
         if (client instanceof LanguageAwareDictionaryClient langClient) {
 
             if (!langClient.getSupportedLanguages().contains(language)) {
-                throw new IllegalArgumentException("Language not supported");
+                throw new LanguageNotSupportedException(language.name());
             }
 
             result = client.getWordDefinition(word, language);

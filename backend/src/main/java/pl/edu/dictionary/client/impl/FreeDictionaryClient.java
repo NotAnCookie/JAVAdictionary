@@ -9,6 +9,7 @@ import pl.edu.dictionary.client.LanguageAwareDictionaryClient;
 import pl.edu.dictionary.client.dto.Entry;
 import pl.edu.dictionary.client.dto.FreeDictionaryResponse;
 import pl.edu.dictionary.client.dto.Sense;
+import pl.edu.dictionary.exception.WordNotFoundException;
 import pl.edu.dictionary.model.Language;
 import pl.edu.dictionary.model.WordDefinition;
 
@@ -24,33 +25,6 @@ public class FreeDictionaryClient
     private static final String BASE_URL =
             "https://freedictionaryapi.com/api/v1/entries/";
 
-//    @Override
-//    public WordDefinition getWordDefinition(String word, Language language) {
-//
-//        String langCode = mapLanguage(language);
-//        String url = BASE_URL + langCode + "/" + word;
-//
-//        FreeDictionaryResponse[] response =
-//                restTemplate.getForObject(url, FreeDictionaryResponse[].class);
-//
-//        if (response == null || response.length == 0) {
-//            return new WordDefinition(word, "No definition found");
-//        }
-//
-//        // na start: pierwsza definicja
-//        var meaning = response[0].meanings.get(0);
-//        var def = meaning.definitions.get(0);
-//
-//        WordDefinition result = new WordDefinition();
-//        result.setWord(word);
-//        result.setDefinition(def.definition);
-//        result.setSynonyms(
-//                def.synonyms != null ? def.synonyms : List.of()
-//        );
-//
-//        return result;
-//    }
-
     @Override
     public WordDefinition getWordDefinition(String word, Language language) {
 
@@ -61,13 +35,13 @@ public class FreeDictionaryClient
                 restTemplate.getForObject(url, FreeDictionaryResponse.class);
 
         if (response == null || response.entries == null || response.entries.isEmpty()) {
-            return new WordDefinition(word, "No definition found");
+            throw new WordNotFoundException(word, "freeDictionaryClient");
         }
 
         Entry firstEntry = response.entries.get(0);
 
         if (firstEntry.senses == null || firstEntry.senses.isEmpty()) {
-            return new WordDefinition(word, "No definition found");
+            throw new WordNotFoundException(word, "freeDictionaryClient");
         }
 
         Sense firstSense = firstEntry.senses.get(0);
@@ -76,7 +50,7 @@ public class FreeDictionaryClient
         result.setWord(word);
         result.setDefinition(firstSense.definition);
         result.setSynonyms(firstSense.synonyms != null ? firstSense.synonyms : List.of());
-        result.setProvider("freeDictionaryClient");
+        //result.setProvider("freeDictionaryClient"); // ustawiane w service
 
         return result;
     }
