@@ -12,6 +12,8 @@ import android.widget.ListView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class HistoryActivity extends AppCompatActivity {
@@ -29,7 +31,7 @@ public class HistoryActivity extends AppCompatActivity {
 		historyManager = new SearchHistoryManager(this);
 		ListView listView = findViewById(R.id.historyListView);
 		
-		historyList = historyManager.getHistory();
+		historyList = new ArrayList<>(historyManager.getHistory());
 		adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, historyList);
 		listView.setAdapter(adapter);
 		

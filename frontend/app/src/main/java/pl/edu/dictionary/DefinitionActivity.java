@@ -33,16 +33,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.schedulers.Schedulers;
-import pl.edu.dictionary.api.ApiClient;
 import pl.edu.dictionary.models.WordDefinition;
 import retrofit2.HttpException;
 
 public class DefinitionActivity extends AppCompatActivity {
 	public static final String WORD_DEFINITION_EXTRA = "word_definition";
-	
-	private LinearLayout mainLayout;
 	
 	private ListView definitionsListView;
 	private TextView lookupTextView;
@@ -51,6 +46,8 @@ public class DefinitionActivity extends AppCompatActivity {
 	private WordDefinition[] wordDefinitions;
 	private Toolbar actionBar;
 	
+	private SearchService searchService;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -58,10 +55,12 @@ public class DefinitionActivity extends AppCompatActivity {
 		actionBar = findViewById(R.id.toolbar);
 		setSupportActionBar(actionBar);
 		
-		mainLayout = findViewById(R.id.mainLayout);
+		LinearLayout mainLayout = findViewById(R.id.mainLayout);
 		definitionsListView = findViewById(R.id.definitionListView);
 		lookupTextView = findViewById(R.id.lookupTextView);
 		lookupProgressBar = findViewById(R.id.lookupProgressBar);
+		
+		searchService = new SearchService(this);
 		
 		wordDefinitions = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
 				? getIntent().getParcelableArrayExtra(WORD_DEFINITION_EXTRA, WordDefinition.class)
@@ -179,38 +178,29 @@ public class DefinitionActivity extends AppCompatActivity {
 	@SuppressWarnings("ResultOfMethodCallIgnored")
 	@SuppressLint("CheckResult")
 	private void lookupWord(String word) {
-		ApiClient.getDictionaryClient().getDefinitions(word, null, null)
-				.subscribeOn(Schedulers.io())
-				.observeOn(AndroidSchedulers.mainThread())
-				.doOnSubscribe(disposable -> lookupProgressBar.setVisibility(View.VISIBLE))
-				.doFinally(() -> lookupProgressBar.setVisibility(View.GONE))
-				.subscribe(
-						definitions -> {
-							if (definitions != null && !definitions.isEmpty()) {
-//								saveSearch(word);
-								launchActivity(this, definitions);
-							} else {
-								lookupError("No definitions found for: " + word);
-							}
-						},
-						t -> {
-							Log.e("DefinitionActivity", "Lookup error", t);
-							if (t instanceof HttpException httpException) {
-								if (httpException.code() == 404) {
-									lookupError("No definitions found for: " + word);
-								}
-								else if (httpException.code() >= 500) {
-									lookupError("Server error");
-								}
-								else {
-									lookupError("Unknown error");
-								}
-							}
-							else {
-								lookupError("Connection error");
-							}
+		searchService.performSearch(word, null, null,
+				disposable -> lookupProgressBar.setVisibility(View.VISIBLE),
+				() -> lookupProgressBar.setVisibility(View.GONE),
+				definitions -> launchActivity(this, definitions),
+				t -> {
+					if (t instanceof SearchService.WordNotFoundException wordNotFoundException) {
+						lookupError(wordNotFoundException.getMessage());
+						return;
+					}
+					Log.e("DefinitionActivity", "Lookup error", t);
+					if (t instanceof HttpException httpException) {
+						if (httpException.code() >= 500) {
+							lookupError("Server error");
 						}
-				);
+						else {
+							lookupError("Unknown error");
+						}
+					}
+					else {
+						lookupError("Connection error");
+					}
+				}
+		);
 	}
 	
 	public static void launchActivity(Activity context, List<WordDefinition> wordDefinitions) {
