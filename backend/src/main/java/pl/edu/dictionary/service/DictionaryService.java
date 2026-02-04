@@ -36,7 +36,7 @@ public class DictionaryService {
         WordDefinition result =
                 factory.getDefaultClient().getWordDefinition(word);
 
-        result.setProvider(provider);
+        result.setProvider(provider.getBeanName());
         return result;
     }
 
@@ -46,7 +46,7 @@ public class DictionaryService {
         WordDefinition result =
                 factory.getClient(provider).getWordDefinition(word);
 
-        result.setProvider(resolved);
+        result.setProvider(resolved.getBeanName());
         return result;
     }
 
@@ -79,7 +79,7 @@ public class DictionaryService {
             result = client.getWordDefinition(word);
         }
 
-        result.setProvider(resolvedProvider);
+        result.setProvider(resolvedProvider.getBeanName());
         return result;
     }
 
