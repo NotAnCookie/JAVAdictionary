@@ -1,11 +1,13 @@
 package pl.edu.dictionary.client.impl;
 
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import pl.edu.dictionary.client.DictionaryClient;
 import pl.edu.dictionary.client.RawDictionaryClient;
 import pl.edu.dictionary.client.dto.DatamuseResponse;
+import pl.edu.dictionary.exception.WordNotFoundException;
 import pl.edu.dictionary.model.WordDefinition;
 
 import java.util.Arrays;
@@ -28,21 +30,28 @@ public class DatamuseDictionaryClient implements DictionaryClient, RawDictionary
 
     @Override
     public WordDefinition getWordDefinition(String word) {
+        try {
+            DatamuseResponse[] response =
+                    restTemplate.getForObject(API_URL + word, DatamuseResponse[].class);
 
-        DatamuseResponse[] response =
-                restTemplate.getForObject(API_URL + word, DatamuseResponse[].class);
+            List<String> synonyms = Arrays.stream(response)
+                    .map(r -> r.word)
+                    .limit(10)
+                    .toList();
 
-        List<String> synonyms = Arrays.stream(response)
-                .map(r -> r.word)
-                .limit(10)
-                .toList();
+            if (synonyms.size() == 0){
+                throw new WordNotFoundException(word, "datamuseClient");
+            }
 
-        WordDefinition def = new WordDefinition();
-        def.setWord(word);
-        def.setDefinition("Definition not available for this provider.");
-        def.setSynonyms(synonyms);
+            WordDefinition def = new WordDefinition();
+            def.setWord(word);
+            def.setDefinition("Definition not available for this provider.");
+            def.setSynonyms(synonyms);
 
-        return def;
+            return def;
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new WordNotFoundException(word, "datamuseClient");
+        }
     }
 
     // TESTs only

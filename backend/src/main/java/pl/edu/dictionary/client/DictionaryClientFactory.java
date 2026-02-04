@@ -3,6 +3,7 @@ package pl.edu.dictionary.client;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import pl.edu.dictionary.model.DictionaryProvider;
+import pl.edu.dictionary.exception.ProviderNotFoundException;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -24,9 +25,9 @@ public class DictionaryClientFactory {
     public DictionaryClient getClient(String provider) {
         DictionaryClient client = clients.get(provider);
         if (client == null) {
-            System.out.println("Unknown provider requested: " + provider);
-            System.out.println("Available: " + clients.keySet());
-            throw new IllegalArgumentException("Unknown dictionary provider: " + provider);
+            //System.out.println("Unknown provider requested: " + provider);
+            //System.out.println("Available: " + clients.keySet());
+            throw new ProviderNotFoundException(provider);
         }
         return client;
     }
@@ -44,7 +45,7 @@ public class DictionaryClientFactory {
                 .filter(p -> p.getBeanName().equals(provider))
                 .findFirst()
                 .orElseThrow(() ->
-                        new IllegalArgumentException("Unknown dictionary provider: " + provider));
+                        new ProviderNotFoundException(provider));
     }
 
     public DictionaryProvider getDefaultProvider() {
