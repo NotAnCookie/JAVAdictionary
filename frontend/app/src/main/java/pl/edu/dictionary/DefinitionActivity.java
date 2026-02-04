@@ -224,7 +224,9 @@ public class DefinitionActivity extends AppCompatActivity {
 		int itemId = item.getItemId();
 		if (itemId == R.id.action_search) {
 			// Handle search action
-			finish(); // TODO won't work with multiple activities
+			Intent intent = new Intent(this, MainActivity.class);
+			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+			startActivity(intent);
 			return true;
 		}
 		return super.onOptionsItemSelected(item);

@@ -1,6 +1,7 @@
 package pl.edu.dictionary;
 
 import android.annotation.SuppressLint;
+import android.app.ComponentCaller;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -268,6 +269,13 @@ public class MainActivity extends AppCompatActivity {
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.main_menu, menu);
 		return true;
+	}
+	
+	@Override
+	public void onNewIntent(@NonNull Intent intent) {
+		super.onNewIntent(intent);
+		setIntent(intent);
+		searchEditText.setText("");
 	}
 	
 }
