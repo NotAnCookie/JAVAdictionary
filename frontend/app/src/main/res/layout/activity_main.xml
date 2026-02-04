@@ -1,5 +1,6 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -31,11 +32,27 @@
             android:maxLines="1"
             android:singleLine="true" />
 
+        <TextView
+            android:id="@+id/providerTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Provider:"
+            android:layout_marginTop="8dp" />
         <Spinner
             android:id="@+id/providerSpinner"
             android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/languageTextView"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:text="Language:"
             android:layout_marginTop="8dp" />
+        <Spinner
+            android:id="@+id/languageSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
 
         <ProgressBar
             android:id="@+id/progressBar"
@@ -45,15 +62,28 @@
             android:layout_gravity="center"
             android:visibility="gone" />
 
-        <ScrollView
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
             <TextView
-                android:id="@+id/resultTextView"
+                android:id="@+id/errorTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="16sp" />
-        </ScrollView>
+                android:textSize="16sp"
+                android:textColor="?attr/colorError"/>
+            <TextView
+                android:id="@+id/wordNotFoundTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="Word 'lorem' not found\nDid You mean:"
+                android:textSize="16sp"
+                android:textColor="?attr/colorOnSurface"/>
+
+            <ListView
+                android:id="@+id/autocompleteListView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>

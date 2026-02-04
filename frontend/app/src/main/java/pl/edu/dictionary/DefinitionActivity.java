@@ -75,7 +75,7 @@ public class DefinitionActivity extends AppCompatActivity {
 		TextView definitionTextView = view.findViewById(R.id.definitionTextView);
 		TextView synonymsTextView = view.findViewById(R.id.synonymsTextView);
 		
-		providerTextView.setText(wordDefinition.getWord()); // TODO: Replace with provider name
+		providerTextView.setText(wordDefinition.getProvider());
 		definitionTextView.setText(wordDefinition.getDefinition());
 		if (wordDefinition.getSynonyms().isEmpty())
 			synonymsTextView.setVisibility(View.GONE);
