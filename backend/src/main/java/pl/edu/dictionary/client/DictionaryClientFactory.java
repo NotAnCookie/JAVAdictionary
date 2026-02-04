@@ -24,6 +24,8 @@ public class DictionaryClientFactory {
     public DictionaryClient getClient(String provider) {
         DictionaryClient client = clients.get(provider);
         if (client == null) {
+            System.out.println("Unknown provider requested: " + provider);
+            System.out.println("Available: " + clients.keySet());
             throw new IllegalArgumentException("Unknown dictionary provider: " + provider);
         }
         return client;
