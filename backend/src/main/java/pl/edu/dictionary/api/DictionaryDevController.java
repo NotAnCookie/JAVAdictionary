@@ -39,10 +39,10 @@ public class DictionaryDevController {
                     description = "Optional dictionary provider",
                     example = "dictionaryApiDevClient"
             )
-            @RequestParam(required = false) DictionaryProvider provider
+            @RequestParam(required = false) String provider
     ) {
         return provider == null
                 ? service.getRawDefault(word)
-                : service.getRaw(word, provider.getBeanName());
+                : service.getRaw(word, provider);
     }
 }

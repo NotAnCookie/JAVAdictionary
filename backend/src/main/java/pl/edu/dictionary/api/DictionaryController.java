@@ -42,7 +42,7 @@ public class DictionaryController {
                     description = "Optional dictionary provider",
                     example = "dictionaryApiDevClient"
             )
-            @RequestParam(required = false) DictionaryProvider provider,
+            @RequestParam(required = false) String provider,
 
             @Parameter(
                     description = "Optional language (default: EN)",
@@ -52,7 +52,7 @@ public class DictionaryController {
     ) {
         return provider == null
                 ? service.getWord(word, lang)
-                : service.getWord(word, provider.getBeanName(), lang);
+                : service.getWord(word, provider, lang);
     }
 
 
