@@ -27,7 +27,6 @@ public class ApiClient {
 		if (retrofit != null) return;
 		// Add the Interceptor to the OkHttpClient
 		OkHttpClient client = new OkHttpClient.Builder()
-				.addInterceptor(new MockInterceptor()) // remove this line to use the real API
 				.build();
 		
 		retrofit = new Retrofit.Builder()
