@@ -5,6 +5,7 @@
     <item android:id="@+id/action_clear"
         android:icon="@android:drawable/ic_menu_delete"
         android:iconTint="?attr/colorOnPrimary"
+        app:iconTint="?attr/colorOnPrimary"
         android:title="Clear History"
         app:showAsAction="always"/>
 </menu>

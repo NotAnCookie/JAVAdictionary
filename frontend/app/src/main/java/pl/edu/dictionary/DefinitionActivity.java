@@ -62,6 +62,8 @@ public class DefinitionActivity extends AppCompatActivity {
 		lookupTextView = findViewById(R.id.lookupTextView);
 		lookupProgressBar = findViewById(R.id.lookupProgressBar);
 		
+		MainActivity.setInsets(actionBar, findViewById(R.id.mainLayout2));
+		
 		searchService = new SearchService(this);
 		
 		wordDefinitions = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
@@ -221,15 +223,41 @@ public class DefinitionActivity extends AppCompatActivity {
 			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 			startActivity(intent);
 			return true;
+		} else if (itemId == R.id.action_favourite_add) {
+			// Handle favourite action
+			searchService.saveFavourite(wordDefinitions[0].getWord());
+			toggleFavouriteIcon(true);
+			return true;
+		} else if (itemId == R.id.action_favourite_remove) {
+			// Handle favourite action
+			searchService.removeFavourite(wordDefinitions[0].getWord());
+			toggleFavouriteIcon(false);
+			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+	
+	private void toggleFavouriteIcon(boolean isFavourite) {
+		MenuItem add = actionBar.getMenu().findItem(R.id.action_favourite_add);
+		MenuItem remove = actionBar.getMenu().findItem(R.id.action_favourite_remove);
+		
+		if (add != null) add.setVisible(!isFavourite);
+		if (remove != null) remove.setVisible(isFavourite);
 	}
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.definition_menu, menu);
+		if (wordDefinitions != null && wordDefinitions.length > 0)
+			toggleFavouriteIcon(searchService.isFavourite(wordDefinitions[0].getWord()));
 		return true;
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		invalidateOptionsMenu();
 	}
 	
 	@Override

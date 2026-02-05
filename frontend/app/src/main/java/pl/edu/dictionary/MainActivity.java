@@ -17,10 +17,15 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,8 +61,12 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		EdgeToEdge.enable(this);
 		setContentView(R.layout.activity_main);
-		setSupportActionBar(findViewById(R.id.toolbar));
+		Toolbar toolbar = findViewById(R.id.toolbar);
+		setSupportActionBar(toolbar);
+		
+		setInsets(toolbar, findViewById(R.id.mainLayout));
 		
 		searchEditText = findViewById(R.id.searchEditText);
 		providerSpinner = findViewById(R.id.providerSpinner);
@@ -107,6 +116,27 @@ public class MainActivity extends AppCompatActivity {
 		
 		updateProviderSpinner(Collections.emptyList());
 		updateProviders();
+	}
+	
+	public static void setInsets(Toolbar toolbar, View mainLayout) {
+		ViewCompat.setOnApplyWindowInsetsListener(toolbar, (v, insets) -> {
+			Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+			v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+			return WindowInsetsCompat.CONSUMED;
+		});
+		int mainLayoutTop = mainLayout.getPaddingTop();
+		int mainLayoutLeft = mainLayout.getPaddingLeft();
+		int mainLayoutRight = mainLayout.getPaddingRight();
+		int mainLayoutBottom = mainLayout.getPaddingBottom();
+		ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, insets) -> {
+			Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+			v.setPadding(
+					mainLayoutLeft + systemBars.left,
+					mainLayoutTop,
+					mainLayoutRight + systemBars.right,
+					mainLayoutBottom + systemBars.bottom);
+			return WindowInsetsCompat.CONSUMED;
+		});
 	}
 	
 	@Override
@@ -237,11 +267,29 @@ public class MainActivity extends AppCompatActivity {
 		historyLauncher.launch(intent);
 	}
 	
+	private final ActivityResultLauncher<Intent> favouriteLauncher =
+			registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+				if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+					// Automatically search when selected from favourites
+					String word = result.getData().getStringExtra("selected_word");
+					searchEditText.setText(word);
+					performSearch();
+				}
+			});
+	
+	private void openFavourites() {
+		Intent intent = new Intent(this, FavouriteActivity.class);
+		favouriteLauncher.launch(intent);
+	}
+	
 	@Override
 	public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 		int itemId = item.getItemId();
 		if (itemId == R.id.action_history) {
 			openHistory();
+			return true;
+		} else if (itemId == R.id.action_favourite) {
+			openFavourites();
 			return true;
 		}
 		return super.onOptionsItemSelected(item);

@@ -13,16 +13,15 @@
         android:background="?attr/colorPrimary"
         app:titleTextColor="?attr/colorOnPrimary"
         android:elevation="4dp"
-        app:title="History"
+        app:title="Favorite Words"
         android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-        app:menu="@menu/history_menu"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
 
     <ListView
-        android:id="@+id/historyListView"
+        android:id="@+id/favouriteListView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:padding="16dp" />
+        android:padding="16dp"/>
 </LinearLayout>
