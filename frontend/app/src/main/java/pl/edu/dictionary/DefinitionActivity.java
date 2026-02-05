@@ -30,6 +30,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -59,6 +62,8 @@ public class DefinitionActivity extends AppCompatActivity {
 	private TextView lookupTextView;
 	private ProgressBar lookupProgressBar;
 	
+	private Toolbar actionBar;
+	
 	private WordDefinition[] wordDefinitions;
 	@Nullable
 	private Language language;
@@ -69,7 +74,7 @@ public class DefinitionActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_definition);
-		Toolbar actionBar = findViewById(R.id.toolbar);
+		actionBar = findViewById(R.id.toolbar);
 		setSupportActionBar(actionBar);
 		
 		View backgroundClickView = findViewById(R.id.backgroundClickView);
@@ -78,7 +83,13 @@ public class DefinitionActivity extends AppCompatActivity {
 		lookupTextView = findViewById(R.id.lookupTextView);
 		lookupProgressBar = findViewById(R.id.lookupProgressBar);
 		
-		MainActivity.setInsets(actionBar, findViewById(R.id.mainLayout2));
+		MainActivity.setInsets(actionBar, findViewById(R.id.listContainer));
+		
+		ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.lookupLayout), (v, insets) -> {
+			Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+			v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom);
+			return WindowInsetsCompat.CONSUMED;
+		});
 		
 		searchService = new SearchService(this);
 		
