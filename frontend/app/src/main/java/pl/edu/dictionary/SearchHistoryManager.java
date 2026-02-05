@@ -6,6 +6,7 @@ import android.text.TextUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class SearchHistoryManager {
@@ -46,6 +47,7 @@ public class SearchHistoryManager {
 	
 	public List<String> getHistory() {
 		String serialised = sharedPreferences.getString(KEY_HISTORY, "");
+		if (serialised.isEmpty()) return Collections.emptyList();
 		String[] split = serialised.split(delimiter);
 		return Arrays.asList(split);
 	}
@@ -55,7 +57,7 @@ public class SearchHistoryManager {
 	}
 	
 	public boolean removeSearch(String word) {
-		List<String> history = getHistory();
+		List<String> history = new ArrayList<>(getHistory());
 		if (history.remove(word)) {
 			saveHistory(history);
 			return true;

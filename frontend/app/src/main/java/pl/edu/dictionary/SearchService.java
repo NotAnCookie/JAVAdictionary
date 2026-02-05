@@ -8,6 +8,7 @@ import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.CheckReturnValue;
@@ -25,12 +26,14 @@ import retrofit2.HttpException;
 public class SearchService {
 	
 	private final SearchHistoryManager historyManager;
+	private final FavouriteManager favouriteManager;
 	private final ArrayAdapter<String> autoCompleteAdapter;
 	
 	private List<DictionaryProvider> dictionaryProviders = new ArrayList<>();
 	
 	public SearchService(Context context) {
 		this.historyManager = new SearchHistoryManager(context);
+		this.favouriteManager = new FavouriteManager(context);
 		var history = new ArrayList<>(historyManager.getHistory());
 		this.autoCompleteAdapter = new ArrayAdapter<>(context, android.R.layout.simple_dropdown_item_1line, history);
 	}
@@ -162,6 +165,20 @@ public class SearchService {
 		autoCompleteAdapter.remove(word); // Ensure only one entry is displayed for each word
 		autoCompleteAdapter.add(word);
 		autoCompleteAdapter.notifyDataSetChanged();
+	}
+	
+	public boolean isFavourite(@NonNull String word) {
+		return favouriteManager.getFavourites().stream()
+				.map( str -> str.toLowerCase(Locale.ROOT))
+				.anyMatch(str -> str.equals(word.trim().toLowerCase(Locale.ROOT)));
+	}
+	
+	public void saveFavourite(@NonNull String word) {
+		favouriteManager.saveFavourite(word.trim());
+	}
+	
+	public void removeFavourite(@NonNull String word) {
+		favouriteManager.removeFavourite(word.trim());
 	}
 	
 	public static class WordNotFoundException extends RuntimeException {
