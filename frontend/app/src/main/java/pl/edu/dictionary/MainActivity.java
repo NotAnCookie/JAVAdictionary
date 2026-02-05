@@ -133,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 	
 	private void updateProviderSpinner(List<DictionaryProvider> providers) {
+		searchService.setDictionaryProviders(providers);
 		dictionaryProviders = new ArrayList<>(providers);
 		dictionaryProviders.add(0, DictionaryProvider.ALL);
 		providerSpinner.setSelection(0);
@@ -202,7 +203,11 @@ public class MainActivity extends AppCompatActivity {
 				errorTextView.setText("Internal server error.");
 			else
 				errorTextView.setText("Error: " + httpException.message());
-		} else {
+		}
+		else if (t instanceof RuntimeException) {
+			errorTextView.setText("Unexpected error: " + t.getMessage());
+		}
+		else {
 			errorTextView.setText("Error: Connection failed.");
 		}
 		progressBar.setVisibility(View.GONE);
