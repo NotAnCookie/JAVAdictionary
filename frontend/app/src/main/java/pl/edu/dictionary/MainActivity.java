@@ -157,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
 						t -> {
 							dictionaryProviders = Collections.emptyList();
 							Log.e("MainActivity", "Provider load error", t);
-							errorTextView.setText("Error: Connection failed.");
+							errorTextView.setText(R.string.error_connection_failed);
 						}
 				));
 	}
@@ -217,11 +217,11 @@ public class MainActivity extends AppCompatActivity {
 		if (suggestions.isEmpty()) {
 			wordNotFoundTextView.setVisibility(View.VISIBLE);
 			autocompleteListView.setVisibility(View.GONE);
-			wordNotFoundTextView.setText("Word '" + searchEditText.getText() + "' not found.");
+			wordNotFoundTextView.setText(getString(R.string.word_not_found_format, searchEditText.getText()));
 		} else {
 			wordNotFoundTextView.setVisibility(View.VISIBLE);
 			autocompleteListView.setVisibility(View.VISIBLE);
-			wordNotFoundTextView.setText("Word '" + searchEditText.getText() + "' not found.\nDid You mean:");
+			wordNotFoundTextView.setText(getString(R.string.word_not_found_autocomplete_format, searchEditText.getText()));
 			autocompleteListView.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, suggestions));
 		}
 	}
@@ -230,15 +230,15 @@ public class MainActivity extends AppCompatActivity {
 		Log.e("MainActivity", "Word search error", t);
 		if (t instanceof HttpException httpException) {
 			if (httpException.code() >= 500)
-				errorTextView.setText("Internal server error.");
+				errorTextView.setText(R.string.server_error);
 			else
-				errorTextView.setText("Error: " + httpException.message());
+				errorTextView.setText(getString(R.string.error_format, httpException.getMessage()));
 		}
 		else if (t instanceof RuntimeException) {
-			errorTextView.setText("Unexpected error: " + t.getMessage());
+			errorTextView.setText(getString(R.string.runtime_error_format, t.getMessage()));
 		}
 		else {
-			errorTextView.setText("Error: Connection failed.");
+			errorTextView.setText(getString(R.string.connection_error));
 		}
 		progressBar.setVisibility(View.GONE);
 	}

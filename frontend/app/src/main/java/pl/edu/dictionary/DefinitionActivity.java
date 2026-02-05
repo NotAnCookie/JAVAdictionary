@@ -100,9 +100,9 @@ public class DefinitionActivity extends AppCompatActivity {
 		language = lang == -1 ? null : Language.values()[lang];
 		
 		if (wordDefinitions == null || wordDefinitions.length == 0) {
-			actionBar.setTitle("Not Found");
+			actionBar.setTitle(R.string.not_found);
 			TextView errorTextView = findViewById(R.id.errorTextView);
-			errorTextView.setText("Word not found.");
+			errorTextView.setText(R.string.word_not_found);
 			definitionsListView.setVisibility(View.GONE);
 			return;
 		}
@@ -142,7 +142,7 @@ public class DefinitionActivity extends AppCompatActivity {
 		if (wordDefinition.getSynonyms().isEmpty())
 			synonymsTextView.setVisibility(View.GONE);
 		else
-			setSpannableText(synonymsTextView, "Synonyms: " + TextUtils.join(", ", wordDefinition.getSynonyms()), true);
+			setSpannableText(synonymsTextView, getString(R.string.synonyms_format, TextUtils.join(", ", wordDefinition.getSynonyms())), true);
 	}
 	
 	private void setSpannableText(TextView textView, String text, boolean skipFirstWord) {
@@ -298,14 +298,14 @@ public class DefinitionActivity extends AppCompatActivity {
 			Log.e("DefinitionActivity", "Lookup error", t);
 			if (t instanceof HttpException httpException) {
 				if (httpException.code() >= 500) {
-					lookupError("Server error");
+					lookupError(getString(R.string.server_error));
 				}
 				else {
-					lookupError("Unknown error");
+					lookupError(getString(R.string.error_format, httpException.getMessage()));
 				}
 			}
 			else {
-				lookupError("Connection error");
+				lookupError(getString(R.string.connection_error));
 			}
 		};
 		Disposable disposable = providers.size() == 1

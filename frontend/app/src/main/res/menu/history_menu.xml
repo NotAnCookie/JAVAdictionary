@@ -6,6 +6,6 @@
         android:icon="@android:drawable/ic_menu_delete"
         android:iconTint="?attr/colorOnPrimary"
         app:iconTint="?attr/colorOnPrimary"
-        android:title="Clear History"
+        android:title="@string/menu_action_clear_history"
         app:showAsAction="always"/>
 </menu>

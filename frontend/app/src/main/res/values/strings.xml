@@ -1,3 +1,39 @@
 <resources>
     <string name="app_name">Dictionary</string>
+    <string name="word_not_found">Word not found.</string>
+    <string name="not_found">Not Found</string>
+    <string name="error_connection_failed">Error: Connection failed.</string>
+    <string name="word_not_found_format">Word not found: %1$s</string>
+    <string name="word_not_found_autocomplete_format">Word \'%1$s\' not found.\nDid You mean:</string>
+    <string name="server_error">Internal server error.</string>
+    <string name="error_format">Error: %1$s</string>
+    <string name="runtime_error_format">Unexpected error: %1$s</string>
+    <string name="connection_error">Error: Connection failed.</string>
+    <string name="synonyms_format">Synonyms: %1$s</string>
+    <string name="dialog_yes">Yes</string>
+    <string name="dialog_no">No</string>
+    <string name="delete_favourite_dialog_title">Delete Favourite Entry</string>
+    <string name="delete_favourite_dialog_message_format">Are you sure you want to remove \'%1$s\' from the favourites list?</string>
+    <string name="delete_history_dialog_title">Delete History Entry</string>
+    <string name="delete_history_dialog_message_format">Are you sure you want to remove \'%1$s\' from the history?</string>
+    <string name="clear_history_dialog_title">Clear History</string>
+    <string name="clear_history_dialog_message">Are you sure you want to clear the history?</string>
+    <string name="no_definitions_found_format">No definitions found for: %1$s</string>
+    <string name="no_providers_available">No dictionary providers available</string>
+    <string name="favourite_activity_title">Favourite words</string>
+    <string name="history_activity_title">History</string>
+    <string name="search_hint">Type a word…</string>
+    <string name="provider_spinner_hint">Provider:</string>
+    <string name="language_spinner_hint">Language:</string>
+    <string name="menu_action_add_favourite">Add favourite</string>
+    <string name="menu_action_remove_favourite">Remove from favourites</string>
+    <string name="menu_action_clear_history">Clear history</string>
+    <string name="menu_action_search">Search</string>
+    <string name="menu_action_settings">Settings</string>
+    <string name="menu_action_history">Search History</string>
+    <string name="menu_action_favourite">Favourite Words</string>
+
+
+
+
 </resources>
