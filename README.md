@@ -20,10 +20,10 @@ z zewnętrznych źródeł słownikowych.
 5. **Porównywanie definicji z różnych słowników**  
    Użytkownik może sprawdzić definicje tego samego słowa pochodzące z różnych źródeł.
 
-6. **Historia wyszukiwań**  (?)
+6. **Historia wyszukiwań**
    Aplikacja zapisuje historię wyszukiwanych słów, umożliwiając szybki powrót do poprzednich zapytań.
 
-7. **Ulubione słowa**  (?)
+7. **Ulubione słowa**
    Użytkownik może zapisywać wybrane słowa jako ulubione, aby mieć do nich szybki dostęp.
 
 8. **Obsługa wielu języków**  
@@ -32,8 +32,7 @@ z zewnętrznych źródeł słownikowych.
 9. **Podpowiedzi podczas wpisywania słowa**  
    Podczas wpisywania słowa aplikacja podpowiada możliwe dopasowania lub poprawną pisownię.
 
-10. **Wyświetlanie informacji o braku definicji**  
-    Jeżeli definicja słowa nie jest dostępna, aplikacja informuje o tym użytkownika w czytelny sposób.
+10. **Użytkownik może klikać słowa w definicji, aby przejść do ich definicji**
 
 ## Technologie
 
@@ -66,4 +65,5 @@ z zewnętrznych źródeł słownikowych.
 Aplikacja Android łączy się z backendem pod adresem:
 - Emulator: `http://10.0.2.2:8080/`
 - Fizyczne urządzenie: Adres IP hosta.
+
 
