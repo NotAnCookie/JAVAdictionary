@@ -5,11 +5,13 @@
     <item android:id="@+id/action_favourite_add"
         android:icon="@drawable/ic_action_favourite_empty"
         android:iconTint="?attr/colorOnPrimary"
+        app:iconTint="?attr/colorOnPrimary"
         android:title="Add favourite"
         app:showAsAction="ifRoom" />
     <item android:id="@+id/action_favourite_remove"
         android:icon="@drawable/ic_action_favourite"
         android:iconTint="?attr/colorOnPrimary"
+        app:iconTint="?attr/colorOnPrimary"
         android:title="Remove from favourites"
         android:visible="false"
         app:showAsAction="ifRoom" />
@@ -17,6 +19,7 @@
     <item android:id="@+id/action_search"
         android:icon="@android:drawable/ic_menu_search"
         android:iconTint="?attr/colorOnPrimary"
+        app:iconTint="?attr/colorOnPrimary"
         android:title="Search"
         app:showAsAction="ifRoom" />
 

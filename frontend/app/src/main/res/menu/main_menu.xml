@@ -18,12 +18,14 @@
         android:icon="@android:drawable/ic_menu_recent_history"
         android:title="History"
         android:iconTint="?attr/colorOnPrimary"
+        app:iconTint="?attr/colorOnPrimary"
         app:showAsAction="ifRoom"/>
 
     <item android:id="@+id/action_favourite"
         android:icon="@drawable/ic_action_favourite_empty"
         android:title="Favourites"
         android:iconTint="?attr/colorOnPrimary"
+        app:iconTint="?attr/colorOnPrimary"
         app:showAsAction="ifRoom" />
 
 
