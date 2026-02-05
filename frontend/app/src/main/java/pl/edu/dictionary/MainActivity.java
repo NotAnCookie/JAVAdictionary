@@ -151,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
 		
 		Disposable disposable = searchService.performSearch(word, provider, language,
 				definitions -> {
-					DefinitionActivity.launchActivity(this, definitions);
+					DefinitionActivity.launchActivity(this, definitions, language);
 					progressBar.setVisibility(View.GONE);
 				},
 				t -> {

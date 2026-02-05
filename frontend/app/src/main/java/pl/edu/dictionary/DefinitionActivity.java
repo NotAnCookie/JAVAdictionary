@@ -27,20 +27,29 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.constraintlayout.widget.ConstraintLayout;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.functions.Action;
+import io.reactivex.rxjava3.functions.Consumer;
+import pl.edu.dictionary.models.DictionaryProvider;
+import pl.edu.dictionary.models.Language;
 import pl.edu.dictionary.models.WordDefinition;
 import retrofit2.HttpException;
 
 public class DefinitionActivity extends AppCompatActivity {
 	public static final String WORD_DEFINITION_EXTRA = "word_definition";
+	public static final String LANGUAGE_EXTRA = "language";
 	
 	private final CompositeDisposable disposables = new CompositeDisposable();
 	
@@ -51,7 +60,8 @@ public class DefinitionActivity extends AppCompatActivity {
 	private ProgressBar lookupProgressBar;
 	
 	private WordDefinition[] wordDefinitions;
-	private Toolbar actionBar;
+	@Nullable
+	private Language language;
 	
 	private SearchService searchService;
 	
@@ -59,7 +69,7 @@ public class DefinitionActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_definition);
-		actionBar = findViewById(R.id.toolbar);
+		Toolbar actionBar = findViewById(R.id.toolbar);
 		setSupportActionBar(actionBar);
 		
 		View backgroundClickView = findViewById(R.id.backgroundClickView);
@@ -73,6 +83,8 @@ public class DefinitionActivity extends AppCompatActivity {
 		wordDefinitions = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
 				? getIntent().getParcelableArrayExtra(WORD_DEFINITION_EXTRA, WordDefinition.class)
 				: (WordDefinition[]) getIntent().getParcelableArrayExtra(WORD_DEFINITION_EXTRA);
+		int lang = getIntent().getIntExtra(LANGUAGE_EXTRA, -1);
+		language = lang == -1 ? null : Language.values()[lang];
 		
 		if (wordDefinitions == null || wordDefinitions.length == 0) {
 			actionBar.setTitle("Not Found");
@@ -258,37 +270,43 @@ public class DefinitionActivity extends AppCompatActivity {
 	}
 	
 	private void lookupWord(String word) {
-		var disposable = searchService.performSearch(word, null, null,
-				d -> lookupProgressBar.setVisibility(View.VISIBLE),
-				() -> lookupProgressBar.setVisibility(View.INVISIBLE),
-				definitions -> launchActivity(this, definitions),
-				t -> {
-					if (t instanceof SearchService.WordNotFoundException wordNotFoundException) {
-						lookupError(wordNotFoundException.getMessage());
-						return;
-					}
-					Log.e("DefinitionActivity", "Lookup error", t);
-					if (t instanceof HttpException httpException) {
-						if (httpException.code() >= 500) {
-							lookupError("Server error");
-						}
-						else {
-							lookupError("Unknown error");
-						}
-					}
-					else {
-						lookupError("Connection error");
-					}
+		var providers = Arrays.stream(wordDefinitions)
+				.map(WordDefinition::getProvider)
+				.map(str -> new DictionaryProvider(str, false, Collections.emptySet()))
+				.collect(Collectors.toList());
+		Consumer<Disposable> doOnSubscribe = d -> lookupProgressBar.setVisibility(View.VISIBLE);
+		Action doFinally = () -> lookupProgressBar.setVisibility(View.INVISIBLE);
+		Consumer<List<WordDefinition>> onSuccess = definitions -> launchActivity(this, definitions, language);
+		Consumer<Throwable> onError = t -> {
+			if (t instanceof SearchService.WordNotFoundException wordNotFoundException) {
+				lookupError(wordNotFoundException.getMessage());
+				return;
+			}
+			Log.e("DefinitionActivity", "Lookup error", t);
+			if (t instanceof HttpException httpException) {
+				if (httpException.code() >= 500) {
+					lookupError("Server error");
 				}
-		);
+				else {
+					lookupError("Unknown error");
+				}
+			}
+			else {
+				lookupError("Connection error");
+			}
+		};
+		Disposable disposable = providers.size() == 1
+				? searchService.performSearch(word, providers.get(0), language, doOnSubscribe, doFinally, onSuccess, onError)
+				: searchService.performAllSearch(word, providers, doOnSubscribe, doFinally, onSuccess, onError);
 		
 		if (disposable != null)
 			disposables.add(disposable);
 	}
 	
-	public static void launchActivity(Activity context, List<WordDefinition> wordDefinitions) {
+	public static void launchActivity(Activity context, List<WordDefinition> wordDefinitions, @Nullable Language language) {
 		Intent intent = new Intent(context, DefinitionActivity.class);
 		intent.putExtra(DefinitionActivity.WORD_DEFINITION_EXTRA, wordDefinitions.toArray(new WordDefinition[0]));
+		intent.putExtra(DefinitionActivity.LANGUAGE_EXTRA, language == null ? -1 : language.ordinal());
 		context.startActivity(intent);
 	}
 	

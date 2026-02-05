@@ -62,7 +62,7 @@ public class SearchService {
 	                                @NonNull Consumer<Throwable> onError) {
 		if (word.isEmpty()) return null;
 		if (provider == DictionaryProvider.ALL)
-			return performAllSearch(word, doOnSubscribe, doFinally, onSuccess, onError);
+			return performAllSearch(word, dictionaryProviders, doOnSubscribe, doFinally, onSuccess, onError);
 		
 		String providerString = provider != null ? provider.getId() : null;
 		String languageString = language != null ? language.getCode() : null;
@@ -95,7 +95,8 @@ public class SearchService {
 	}
 	
 	@Nullable
-	private Disposable performAllSearch(@NonNull String word,
+	public Disposable performAllSearch(@NonNull String word,
+									   @NonNull List<DictionaryProvider> dictionaryProviders,
 	                                   @Nullable Consumer<Disposable> doOnSubscribe,
 	                                   @Nullable Action doFinally,
 	                                   @NonNull Consumer<List<WordDefinition>> onSuccess,
