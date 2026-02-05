@@ -6,6 +6,7 @@ import android.text.TextUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class FavouriteManager {
@@ -29,7 +30,6 @@ public class FavouriteManager {
 		favourites.remove(word);
 		favourites.add(0, word);
 		
-		
 		saveFavourites(favourites);
 	}
 	
@@ -42,12 +42,13 @@ public class FavouriteManager {
 	
 	public List<String> getFavourites() {
 		String serialised = sharedPreferences.getString(KEY_FAVOURITES, "");
+		if (serialised.isEmpty()) return Collections.emptyList();
 		String[] split = serialised.split(delimiter);
 		return Arrays.asList(split);
 	}
 	
 	public boolean removeFavourite(String word) {
-		List<String> favourites = getFavourites();
+		List<String> favourites = new ArrayList<>(getFavourites());
 		if (favourites.remove(word)) {
 			saveFavourites(favourites);
 			return true;
