@@ -6,8 +6,10 @@ import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 public class FavouriteActivity extends AppCompatActivity {
 	
@@ -18,11 +20,16 @@ public class FavouriteActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_favourite);
-		setSupportActionBar(findViewById(R.id.toolbar));
+		Toolbar toolbar = findViewById(R.id.toolbar);
+		setSupportActionBar(toolbar);
+		
+		EdgeToEdge.enable(this);
 		
 		favouriteManager = new FavouriteManager(this);
 		
 		ListView listView = findViewById(R.id.favouriteListView);
+		
+		MainActivity.setInsets(toolbar, listView);
 		
 		var favouriteList = favouriteManager.getFavourites();
 		adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, favouriteList);

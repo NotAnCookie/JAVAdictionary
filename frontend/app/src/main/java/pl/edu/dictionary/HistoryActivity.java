@@ -12,6 +12,7 @@ import android.widget.ListView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,10 +27,13 @@ public class HistoryActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_history);
-		setSupportActionBar(findViewById(R.id.toolbar));
+		Toolbar toolbar = findViewById(R.id.toolbar);
+		setSupportActionBar(toolbar);
 		
 		historyManager = new SearchHistoryManager(this);
 		ListView listView = findViewById(R.id.historyListView);
+		
+		MainActivity.setInsets(toolbar, listView);
 		
 		historyList = new ArrayList<>(historyManager.getHistory());
 		adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, historyList);

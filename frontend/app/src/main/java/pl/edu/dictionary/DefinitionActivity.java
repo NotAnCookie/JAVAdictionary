@@ -62,6 +62,8 @@ public class DefinitionActivity extends AppCompatActivity {
 		lookupTextView = findViewById(R.id.lookupTextView);
 		lookupProgressBar = findViewById(R.id.lookupProgressBar);
 		
+		MainActivity.setInsets(actionBar, findViewById(R.id.mainLayout2));
+		
 		searchService = new SearchService(this);
 		
 		wordDefinitions = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
