@@ -237,11 +237,29 @@ public class MainActivity extends AppCompatActivity {
 		historyLauncher.launch(intent);
 	}
 	
+	private final ActivityResultLauncher<Intent> favouriteLauncher =
+			registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+				if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+					// Automatically search when selected from favourites
+					String word = result.getData().getStringExtra("selected_word");
+					searchEditText.setText(word);
+					performSearch();
+				}
+			});
+	
+	private void openFavourites() {
+		Intent intent = new Intent(this, FavouriteActivity.class);
+		favouriteLauncher.launch(intent);
+	}
+	
 	@Override
 	public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 		int itemId = item.getItemId();
 		if (itemId == R.id.action_history) {
 			openHistory();
+			return true;
+		} else if (itemId == R.id.action_favourite) {
+			openFavourites();
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
