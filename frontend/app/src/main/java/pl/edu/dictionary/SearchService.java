@@ -1,6 +1,7 @@
 package pl.edu.dictionary;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.widget.ArrayAdapter;
 
 import androidx.annotation.NonNull;
@@ -28,6 +29,7 @@ public class SearchService {
 	private final SearchHistoryManager historyManager;
 	private final FavouriteManager favouriteManager;
 	private final ArrayAdapter<String> autoCompleteAdapter;
+	private final Resources resources;
 	
 	private List<DictionaryProvider> dictionaryProviders = new ArrayList<>();
 	
@@ -36,6 +38,7 @@ public class SearchService {
 		this.favouriteManager = new FavouriteManager(context);
 		var history = new ArrayList<>(historyManager.getHistory());
 		this.autoCompleteAdapter = new ArrayAdapter<>(context, android.R.layout.simple_dropdown_item_1line, history);
+		this.resources = context.getResources();
 	}
 	
 	public SearchHistoryManager getHistoryManager() { return historyManager; }
@@ -84,12 +87,12 @@ public class SearchService {
 						saveSearch(word);
 						onSuccess.accept(definitions);
 					} else {
-						onError.accept(new WordNotFoundException("No definitions found for: " + word));
+						onError.accept(new WordNotFoundException(resources.getString(R.string.no_definitions_found_format, word)));
 					}
 				},
 				t -> {
 					if (t instanceof HttpException httpException && httpException.code() == 404) {
-						onError.accept(new WordNotFoundException("Word not found: " + word));
+						onError.accept(new WordNotFoundException(resources.getString(R.string.word_not_found_format, word)));
 					}
 					else
 						onError.accept(t);
@@ -106,7 +109,7 @@ public class SearchService {
 	                                   @NonNull Consumer<Throwable> onError) {
 		if (dictionaryProviders.isEmpty()) {
 			try {
-				onError.accept(new RuntimeException("No dictionary providers available"));
+				onError.accept(new RuntimeException(resources.getString(R.string.no_providers_available)));
 			} catch (Throwable e) {
 				throw new RuntimeException(e);
 			}
@@ -144,9 +147,9 @@ public class SearchService {
 								onSuccess.accept(definitions);
 							} else {
 								if (errors.stream().allMatch(t -> t instanceof HttpException httpException && httpException.code() == 404))
-									onError.accept(new WordNotFoundException("Word not found: " + word));
+									onError.accept(new WordNotFoundException(resources.getString(R.string.word_not_found_format, word)));
 								else
-									onError.accept(new RuntimeException("Connection error", errors.isEmpty() ? null : errors.get(0)));
+									onError.accept(new RuntimeException(resources.getString(R.string.connection_error), errors.isEmpty() ? null : errors.get(0)));
 							}
 						},
 						onError);

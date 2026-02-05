@@ -28,7 +28,7 @@
             android:id="@+id/searchEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Type a word..."
+            android:hint="@string/search_hint"
             android:imeOptions="actionSearch"
             android:inputType="text"
             android:maxLines="1"
@@ -38,7 +38,7 @@
             android:id="@+id/providerTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Provider:"
+            android:text="@string/provider_spinner_hint"
             android:layout_marginTop="8dp" />
         <Spinner
             android:id="@+id/providerSpinner"
@@ -49,7 +49,7 @@
             android:id="@+id/languageTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Language:"
+            android:text="@string/language_spinner_hint"
             android:layout_marginTop="8dp" />
         <Spinner
             android:id="@+id/languageSpinner"

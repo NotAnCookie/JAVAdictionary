@@ -52,15 +52,15 @@ public class FavouriteActivity extends AppCompatActivity {
 	
 	private void showDeleteConfirmationDialog(String word) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle("Delete Favourite Entry");
-		builder.setMessage("Are you sure you want to remove '" + word + "' from the favourites list?");
-		builder.setPositiveButton("Yes", (dialog, which) -> {
+		builder.setTitle(getString(R.string.delete_favourite_dialog_title));
+		builder.setMessage(getString(R.string.delete_favourite_dialog_message_format, word));
+		builder.setPositiveButton(getString(R.string.dialog_yes), (dialog, which) -> {
 			if (!favouriteManager.removeFavourite(word))
 				Log.e("FavouriteActivity", "Failed to remove favourite: " + word);
 			adapter.remove(word);
 			adapter.notifyDataSetChanged();
 		});
-		builder.setNegativeButton("No", null);
+		builder.setNegativeButton(R.string.dialog_no, null);
 		builder.show();
 	}
 	

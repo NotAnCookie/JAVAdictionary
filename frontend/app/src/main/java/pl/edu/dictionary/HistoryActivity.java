@@ -56,28 +56,28 @@ public class HistoryActivity extends AppCompatActivity {
 	
 	private void showDeleteConfirmationDialog(String word) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle("Delete History Entry");
-		builder.setMessage("Are you sure you want to remove '" + word + "' from the history?");
-		builder.setPositiveButton("Yes", (dialog, which) -> {
+		builder.setTitle(getString(R.string.delete_history_dialog_title));
+		builder.setMessage(getString(R.string.delete_history_dialog_message_format, word));
+		builder.setPositiveButton(getString(R.string.dialog_yes), (dialog, which) -> {
 			if (!historyManager.removeSearch(word))
 				Log.e("HistoryActivity", "Failed to remove search: " + word);
 			adapter.remove(word);
 			adapter.notifyDataSetChanged();
 		});
-		builder.setNegativeButton("No", null);
+		builder.setNegativeButton(getString(R.string.dialog_no), null);
 		builder.show();
 	}
 	
 	private void showClearConfirmationDialog() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle("Clear History");
-		builder.setMessage("Are you sure you want to clear the history?");
-		builder.setPositiveButton("Yes", (dialog, which) -> {
+		builder.setTitle(getString(R.string.clear_history_dialog_title));
+		builder.setMessage(getString(R.string.clear_history_dialog_message));
+		builder.setPositiveButton(getString(R.string.dialog_yes), (dialog, which) -> {
 			historyManager.clearHistory();
 			adapter.clear();
 			adapter.notifyDataSetChanged();
 		});
-		builder.setNegativeButton("No", null);
+		builder.setNegativeButton(R.string.dialog_no, null);
 		builder.show();
 	}
 	

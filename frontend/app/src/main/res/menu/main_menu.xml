@@ -1,32 +1,23 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!--
-    <item
-        android:id="@+id/action_favorite"
-        android:icon="@android:drawable/ic_menu_save"
-        android:title="Favorite"
-        app:showAsAction="ifRoom"/>
-    -->
-
     <item android:id="@+id/action_settings"
         android:iconTint="?attr/colorOnPrimary"
-        android:title="Settings"
+        android:title="@string/menu_action_settings"
         app:showAsAction="never"/>
 
     <item android:id="@+id/action_history"
         android:icon="@android:drawable/ic_menu_recent_history"
-        android:title="History"
+        android:title="@string/menu_action_history"
         android:iconTint="?attr/colorOnPrimary"
         app:iconTint="?attr/colorOnPrimary"
         app:showAsAction="ifRoom"/>
 
     <item android:id="@+id/action_favourite"
         android:icon="@drawable/ic_action_favourite_empty"
-        android:title="Favourites"
+        android:title="@string/menu_action_favourite"
         android:iconTint="?attr/colorOnPrimary"
         app:iconTint="?attr/colorOnPrimary"
         app:showAsAction="ifRoom" />
-
 
 </menu>
