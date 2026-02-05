@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.icu.text.BreakIterator;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Layout;
 import android.text.Spannable;
 import android.text.TextPaint;
 import android.text.TextUtils;
@@ -16,6 +17,7 @@ import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -25,28 +27,46 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.functions.Action;
+import io.reactivex.rxjava3.functions.Consumer;
+import pl.edu.dictionary.models.DictionaryProvider;
+import pl.edu.dictionary.models.Language;
 import pl.edu.dictionary.models.WordDefinition;
 import retrofit2.HttpException;
 
 public class DefinitionActivity extends AppCompatActivity {
 	public static final String WORD_DEFINITION_EXTRA = "word_definition";
+	public static final String LANGUAGE_EXTRA = "language";
 	
 	private final CompositeDisposable disposables = new CompositeDisposable();
 	
 	private ListView definitionsListView;
+	
+	private LinearLayout lookupLayout;
 	private TextView lookupTextView;
 	private ProgressBar lookupProgressBar;
 	
-	private WordDefinition[] wordDefinitions;
 	private Toolbar actionBar;
+	
+	private WordDefinition[] wordDefinitions;
+	@Nullable
+	private Language language;
 	
 	private SearchService searchService;
 	
@@ -57,18 +77,27 @@ public class DefinitionActivity extends AppCompatActivity {
 		actionBar = findViewById(R.id.toolbar);
 		setSupportActionBar(actionBar);
 		
-		LinearLayout mainLayout = findViewById(R.id.mainLayout);
+		View backgroundClickView = findViewById(R.id.backgroundClickView);
 		definitionsListView = findViewById(R.id.definitionListView);
+		lookupLayout = findViewById(R.id.lookupLayout);
 		lookupTextView = findViewById(R.id.lookupTextView);
 		lookupProgressBar = findViewById(R.id.lookupProgressBar);
 		
-		MainActivity.setInsets(actionBar, findViewById(R.id.mainLayout2));
+		MainActivity.setInsets(actionBar, findViewById(R.id.listContainer));
+		
+		ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.lookupLayout), (v, insets) -> {
+			Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+			v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom);
+			return WindowInsetsCompat.CONSUMED;
+		});
 		
 		searchService = new SearchService(this);
 		
 		wordDefinitions = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
 				? getIntent().getParcelableArrayExtra(WORD_DEFINITION_EXTRA, WordDefinition.class)
 				: (WordDefinition[]) getIntent().getParcelableArrayExtra(WORD_DEFINITION_EXTRA);
+		int lang = getIntent().getIntExtra(LANGUAGE_EXTRA, -1);
+		language = lang == -1 ? null : Language.values()[lang];
 		
 		if (wordDefinitions == null || wordDefinitions.length == 0) {
 			actionBar.setTitle("Not Found");
@@ -80,7 +109,7 @@ public class DefinitionActivity extends AppCompatActivity {
 		
 		displayDefinitions(wordDefinitions);
 		
-		mainLayout.setOnClickListener(v -> hideLookup());
+		backgroundClickView.setOnClickListener(v -> hideLookup());
 		
 		lookupTextView.setOnClickListener(v -> lookupWord(lookupTextView.getText().toString().trim()));
 	}
@@ -96,6 +125,7 @@ public class DefinitionActivity extends AppCompatActivity {
 					convertView = getLayoutInflater().inflate(R.layout.word_definition, parent, false);
 				}
 				displayDefinition(convertView, wordDefinitions[position]);
+				convertView.setOnClickListener(v -> hideLookup());
 				return convertView;
 			}
 		};
@@ -108,27 +138,45 @@ public class DefinitionActivity extends AppCompatActivity {
 		TextView synonymsTextView = view.findViewById(R.id.synonymsTextView);
 		
 		providerTextView.setText(wordDefinition.getProvider());
-		setSpannableText(definitionTextView, wordDefinition.getDefinition());
+		setSpannableText(definitionTextView, wordDefinition.getDefinition(), false);
 		if (wordDefinition.getSynonyms().isEmpty())
 			synonymsTextView.setVisibility(View.GONE);
 		else
-			setSpannableText(synonymsTextView, "Synonyms: " + TextUtils.join(", ", wordDefinition.getSynonyms()));
+			setSpannableText(synonymsTextView, "Synonyms: " + TextUtils.join(", ", wordDefinition.getSynonyms()), true);
 	}
 	
-	private void setSpannableText(TextView textView, String text) {
+	private void setSpannableText(TextView textView, String text, boolean skipFirstWord) {
 		text = text.trim();
-		textView.setMovementMethod(LinkMovementMethod.getInstance());
+		textView.setMovementMethod(new StrictLinkMovementMethod(this::hideLookup));
 		textView.setText(text, TextView.BufferType.SPANNABLE);
+		
 		Spannable spans = (Spannable) textView.getText();
 		BreakIterator iterator = BreakIterator.getWordInstance(Locale.getDefault());
 		iterator.setText(text);
+		
 		int start = iterator.first();
+		boolean isFirstWord = true;
+		
 		for (int end = iterator.next(); end != BreakIterator.DONE; start = end, end = iterator.next()) {
-			String possibleWord = text.substring(start, end);
+			String possibleWord = text.substring(start, end).trim();
+			
+			if (possibleWord.isEmpty())
+				continue;
+			
+			// Skip first word if requested
+			if (skipFirstWord && isFirstWord) {
+				isFirstWord = false;
+				continue;
+			}
+			isFirstWord = false;
+			
 			if (Character.isLetterOrDigit(possibleWord.charAt(0))) {
-				ClickableSpan clickSpan = getClickableSpan(possibleWord);
-				spans.setSpan(clickSpan, start, end,
-						Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+				spans.setSpan(
+						getClickableSpan(possibleWord),
+						start,
+						end,
+						Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+				);
 			}
 		}
 	}
@@ -149,10 +197,65 @@ public class DefinitionActivity extends AppCompatActivity {
 			}
 		};
 	}
+	public static class StrictLinkMovementMethod extends LinkMovementMethod {
+		
+		public interface OutsideClickListener {
+			void onOutsideClick();
+		}
+		
+		private final OutsideClickListener outsideClickListener;
+		
+		public StrictLinkMovementMethod(OutsideClickListener listener) {
+			this.outsideClickListener = listener;
+		}
+		
+		@Override
+		public boolean onTouchEvent(TextView widget, Spannable buffer, MotionEvent event) {
+			int action = event.getAction();
+			
+			if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_DOWN) {
+				int x = (int) event.getX();
+				int y = (int) event.getY();
+				
+				x -= widget.getTotalPaddingLeft();
+				y -= widget.getTotalPaddingTop();
+				
+				x += widget.getScrollX();
+				y += widget.getScrollY();
+				
+				Layout layout = widget.getLayout();
+				int line = layout.getLineForVertical(y);
+				
+				// Prevent clicks past the last character
+				if (x > layout.getLineWidth(line)) {
+					if (action == MotionEvent.ACTION_UP)
+						outsideClickListener.onOutsideClick();
+					return true;
+				}
+				
+				int off = layout.getOffsetForHorizontal(line, x);
+				ClickableSpan[] link = buffer.getSpans(off, off, ClickableSpan.class);
+				
+				if (link.length != 0) {
+					if (action == MotionEvent.ACTION_UP)
+						link[0].onClick(widget);
+					return true;
+				} else {
+					// Clicked inside text but not on a span
+					if (action == MotionEvent.ACTION_UP)
+						outsideClickListener.onOutsideClick();
+					return true;
+				}
+			}
+			
+			return super.onTouchEvent(widget, buffer, event);
+		}
+	}
+	
 	
 	private void displayLookup(@NonNull String lookupText) {
 		lookupTextView.setText(lookupText);
-		lookupTextView.setVisibility(View.VISIBLE);
+		lookupLayout.setVisibility(View.VISIBLE);
 		// set color to ?attr/colorOnSecondaryContainer
 		TypedValue typedValue = new TypedValue();
 		if (getTheme().resolveAttribute(com.google.android.material.R.attr.colorOnSecondaryContainer, typedValue, true))
@@ -164,12 +267,12 @@ public class DefinitionActivity extends AppCompatActivity {
 	}
 	
 	private void hideLookup() {
-		lookupTextView.setVisibility(View.GONE);
+		lookupLayout.setVisibility(View.GONE);
 	}
 	
 	private void lookupError(String message) {
 		lookupTextView.setText(message);
-		lookupTextView.setVisibility(View.VISIBLE);
+		lookupLayout.setVisibility(View.VISIBLE);
 		// set color to ?attr/colorError
 		TypedValue typedValue = new TypedValue();
 		if (getTheme().resolveAttribute(android.R.attr.colorError, typedValue, true))
@@ -180,37 +283,43 @@ public class DefinitionActivity extends AppCompatActivity {
 	}
 	
 	private void lookupWord(String word) {
-		var disposable = searchService.performSearch(word, null, null,
-				d -> lookupProgressBar.setVisibility(View.VISIBLE),
-				() -> lookupProgressBar.setVisibility(View.GONE),
-				definitions -> launchActivity(this, definitions),
-				t -> {
-					if (t instanceof SearchService.WordNotFoundException wordNotFoundException) {
-						lookupError(wordNotFoundException.getMessage());
-						return;
-					}
-					Log.e("DefinitionActivity", "Lookup error", t);
-					if (t instanceof HttpException httpException) {
-						if (httpException.code() >= 500) {
-							lookupError("Server error");
-						}
-						else {
-							lookupError("Unknown error");
-						}
-					}
-					else {
-						lookupError("Connection error");
-					}
+		var providers = Arrays.stream(wordDefinitions)
+				.map(WordDefinition::getProvider)
+				.map(str -> new DictionaryProvider(str, false, Collections.emptySet()))
+				.collect(Collectors.toList());
+		Consumer<Disposable> doOnSubscribe = d -> lookupProgressBar.setVisibility(View.VISIBLE);
+		Action doFinally = () -> lookupProgressBar.setVisibility(View.INVISIBLE);
+		Consumer<List<WordDefinition>> onSuccess = definitions -> launchActivity(this, definitions, language);
+		Consumer<Throwable> onError = t -> {
+			if (t instanceof SearchService.WordNotFoundException wordNotFoundException) {
+				lookupError(wordNotFoundException.getMessage());
+				return;
+			}
+			Log.e("DefinitionActivity", "Lookup error", t);
+			if (t instanceof HttpException httpException) {
+				if (httpException.code() >= 500) {
+					lookupError("Server error");
 				}
-		);
+				else {
+					lookupError("Unknown error");
+				}
+			}
+			else {
+				lookupError("Connection error");
+			}
+		};
+		Disposable disposable = providers.size() == 1
+				? searchService.performSearch(word, providers.get(0), language, doOnSubscribe, doFinally, onSuccess, onError)
+				: searchService.performAllSearch(word, providers, doOnSubscribe, doFinally, onSuccess, onError);
 		
 		if (disposable != null)
 			disposables.add(disposable);
 	}
 	
-	public static void launchActivity(Activity context, List<WordDefinition> wordDefinitions) {
+	public static void launchActivity(Activity context, List<WordDefinition> wordDefinitions, @Nullable Language language) {
 		Intent intent = new Intent(context, DefinitionActivity.class);
 		intent.putExtra(DefinitionActivity.WORD_DEFINITION_EXTRA, wordDefinitions.toArray(new WordDefinition[0]));
+		intent.putExtra(DefinitionActivity.LANGUAGE_EXTRA, language == null ? -1 : language.ordinal());
 		context.startActivity(intent);
 	}
 	

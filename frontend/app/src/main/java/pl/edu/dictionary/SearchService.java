@@ -29,6 +29,8 @@ public class SearchService {
 	private final FavouriteManager favouriteManager;
 	private final ArrayAdapter<String> autoCompleteAdapter;
 	
+	private List<DictionaryProvider> dictionaryProviders = new ArrayList<>();
+	
 	public SearchService(Context context) {
 		this.historyManager = new SearchHistoryManager(context);
 		this.favouriteManager = new FavouriteManager(context);
@@ -38,29 +40,33 @@ public class SearchService {
 	
 	public SearchHistoryManager getHistoryManager() { return historyManager; }
 	public ArrayAdapter<String> getAutoCompleteAdapter() { return autoCompleteAdapter; }
+	public List<DictionaryProvider> getDictionaryProviders() { return dictionaryProviders; }
+	public void setDictionaryProviders(List<DictionaryProvider> dictionaryProviders) { this.dictionaryProviders = new ArrayList<>(dictionaryProviders); }
 	
 	
 	@Nullable
 	@CheckReturnValue
-	public Disposable performSearch(String word,
-	                                DictionaryProvider provider,
-	                                Language language,
-	                                Consumer<List<WordDefinition>> onSuccess,
-	                                Consumer<Throwable> onError) {
+	public Disposable performSearch(@NonNull String word,
+	                                @Nullable DictionaryProvider provider,
+	                                @Nullable Language language,
+	                                @NonNull Consumer<List<WordDefinition>> onSuccess,
+	                                @NonNull Consumer<Throwable> onError) {
 		return performSearch(word, provider, language, null, null, onSuccess, onError);
 	}
 	
 	@Nullable
 	@CheckReturnValue
-	public Disposable performSearch(String word,
-	                                DictionaryProvider provider,
-	                                Language language,
+	public Disposable performSearch(@NonNull String word,
+	                                @Nullable DictionaryProvider provider,
+	                                @Nullable Language language,
 	                                @Nullable Consumer<Disposable> doOnSubscribe,
 	                                @Nullable Action doFinally,
-	                                Consumer<List<WordDefinition>> onSuccess,
-	                                Consumer<Throwable> onError) {
+	                                @NonNull Consumer<List<WordDefinition>> onSuccess,
+	                                @NonNull Consumer<Throwable> onError) {
 		if (word.isEmpty()) return null;
-		if (provider == DictionaryProvider.ALL) provider = null;
+		if (provider == DictionaryProvider.ALL)
+			return performAllSearch(word, dictionaryProviders, doOnSubscribe, doFinally, onSuccess, onError);
+		
 		String providerString = provider != null ? provider.getId() : null;
 		String languageString = language != null ? language.getCode() : null;
 		
@@ -89,6 +95,62 @@ public class SearchService {
 						onError.accept(t);
 				}
 		);
+	}
+	
+	@Nullable
+	public Disposable performAllSearch(@NonNull String word,
+									   @NonNull List<DictionaryProvider> dictionaryProviders,
+	                                   @Nullable Consumer<Disposable> doOnSubscribe,
+	                                   @Nullable Action doFinally,
+	                                   @NonNull Consumer<List<WordDefinition>> onSuccess,
+	                                   @NonNull Consumer<Throwable> onError) {
+		if (dictionaryProviders.isEmpty()) {
+			try {
+				onError.accept(new RuntimeException("No dictionary providers available"));
+			} catch (Throwable e) {
+				throw new RuntimeException(e);
+			}
+			return null;
+		}
+		
+		Observable<Result<WordDefinition>> observable = Observable.fromIterable(dictionaryProviders)
+				.flatMap(provider ->
+						ApiClient.getDictionaryClient().getDefinition(word, provider.getId(), null)
+								.subscribeOn(Schedulers.io())
+								.map(Result::success)
+								.onErrorReturn(Result::error)
+				)
+				.observeOn(AndroidSchedulers.mainThread());
+		if (doOnSubscribe != null)
+			observable = observable.doOnSubscribe(doOnSubscribe);
+		if (doFinally != null)
+			observable = observable.doFinally(doFinally);
+		
+		return observable
+				.toList()
+				.subscribe(
+						results -> {
+							List<WordDefinition> definitions = new ArrayList<>();
+							List<Throwable> errors = new ArrayList<>();
+							for (Result<WordDefinition> result : results) {
+								if (result.isSuccess())
+									definitions.add(result.getData());
+								else
+									errors.add(result.getError());
+							}
+							
+							if (!definitions.isEmpty()) {
+								saveSearch(word);
+								onSuccess.accept(definitions);
+							} else {
+								if (errors.stream().allMatch(t -> t instanceof HttpException httpException && httpException.code() == 404))
+									onError.accept(new WordNotFoundException("Word not found: " + word));
+								else
+									onError.accept(new RuntimeException("Connection error", errors.isEmpty() ? null : errors.get(0)));
+							}
+						},
+						onError);
+		
 	}
 	
 	public void syncHistory() {
