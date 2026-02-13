@@ -1,0 +1,59 @@
+package pl.edu.dictionary.client;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import pl.edu.dictionary.model.DictionaryProvider;
+import pl.edu.dictionary.exception.ProviderNotFoundException;
+
+import java.util.Arrays;
+import java.util.Map;
+/**
+ * Factory for dictionary client implementations.
+ * Dynamic selection of dictionary providers by name.
+ */
+
+
+@Component
+public class DictionaryClientFactory {
+
+    private final Map<String, DictionaryClient> clients;
+
+    public DictionaryClientFactory(Map<String, DictionaryClient> clients) {
+        this.clients = clients;
+    }
+
+    public DictionaryClient getClient(String provider) {
+        DictionaryClient client = clients.get(provider);
+        if (client == null) {
+            //System.out.println("Unknown provider requested: " + provider);
+            //System.out.println("Available: " + clients.keySet());
+            throw new ProviderNotFoundException(provider);
+        }
+        return client;
+    }
+
+    public DictionaryClient getDefaultClient() {
+        return clients.get("dictionaryApiDevClient");
+    }
+
+    public Map<String, DictionaryClient> getAllClients() {
+        return clients;
+    }
+
+    public DictionaryProvider resolveProvider(String provider) {
+        return Arrays.stream(DictionaryProvider.values())
+                .filter(p -> p.getBeanName().equals(provider))
+                .findFirst()
+                .orElseThrow(() ->
+                        new ProviderNotFoundException(provider));
+    }
+
+    public DictionaryProvider getDefaultProvider() {
+        return DictionaryProvider.DICTIONARY_API_DEV;
+    }
+
+    public DictionaryClient getClient(DictionaryProvider provider) {
+        return getClient(provider.getBeanName());
+    }
+}
+
